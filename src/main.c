@@ -70,25 +70,39 @@ int main(void)
 {
     float throttle_pos = 1.0;
     float dt = 1.0 / 50.0;
-    float vehicle_mass = 1580.0;
+    float inv_vehicle_mass = 1.0 / 1580.0;
 
     // Uses iso8855 coordinates
     Vector3f velocity = vector3f_default();
     Engine* engine = engine_new(1.0 / 0.5);
-    Wheel* wheel = wheel_new(1.0 / 0.6, 0.344);
+    Differential diff = (Differential) { .ratio = 2.4, .inv_inertia = 1.0 / 0.18 };
+    Wheel* wl = wheel_new(1.0 / 0.6, 0.344);
+    Wheel* wr = wheel_new(1.0 / 0.6, 0.344);
 
     while (1) {
         float torque = engine_torque(engine, throttle_pos);
-        Force force = wheel_update(wheel, engine->inv_inertia, torque, dt);
-        velocity.x += integrate(force.x, 1.0 / vehicle_mass, dt);
-        velocity.y += integrate(force.y, 1.0 / vehicle_mass, dt);
+        float inv_inertia = engine->inv_inertia + diff.inv_inertia;
 
-        engine->angular_velocity = wheel->angular_velocity;
+        float left_torque;
+        float right_torque;
+        differential_torque(&diff, torque, &left_torque, &right_torque);
+
+        Force fl = wheel_update(wl, inv_inertia, left_torque, dt);
+        Force fr = wheel_update(wr, inv_inertia, right_torque, dt);
+
+        Force force = (Force) { .x = fl.x + fr.x, .y = fl.y + fr.y };
+
+        velocity.x += integrate(force.x, inv_vehicle_mass, dt);
+        velocity.y += integrate(force.y, inv_vehicle_mass, dt);
+
+        engine->angular_velocity =
+            differential_velocity(&diff, wl->angular_velocity, wr->angular_velocity);
 
         printf("Km/h = %f\r", vector3f_length(velocity) / 3.6);
     }
 
     engine_free(engine);
-    wheel_free(wheel);
+    wheel_free(wl);
+    wheel_free(wr);
     return 0;
 }

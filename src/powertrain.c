@@ -20,3 +20,15 @@ void engine_free(Engine* engine)
     free(engine);
 }
 
+void differential_torque(Differential* diff, float input_torque, float* output_left_torque, float* output_right_torque)
+{
+    float torque = input_torque * diff->ratio;
+    // Simple open diff for now
+    *output_left_torque = torque * 0.5;
+    *output_right_torque = torque * 0.5;
+}
+
+float differential_velocity(Differential* diff, float left_angular_velocity, float right_angular_velocity)
+{
+    return (left_angular_velocity + right_angular_velocity) * 0.5 * diff->ratio;
+}
