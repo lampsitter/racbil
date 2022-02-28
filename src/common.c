@@ -26,10 +26,17 @@ float integrate(float torque, float inv_inertia, float dt)
     return torque * inv_inertia * dt;
 }
 
-float rad_to_deg(float radians) {
+float rad_to_deg(float radians)
+{
     return radians * (180.0 / M_PI);
 }
 
-float deg_to_rad(float degrees) {
+float deg_to_rad(float degrees)
+{
     return (degrees * M_PI) / 180.0;
+}
+
+float signum(float v)
+{
+    return (copysignf(1.0, v));
 }

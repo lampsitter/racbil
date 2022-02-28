@@ -30,5 +30,6 @@ float integrate(float torque, float inv_inertia, float dt);
 
 float rad_to_deg(float radians);
 float deg_to_rad(float degrees);
+float signum(float v);
 
 #endif /* RA_COMMON_H */

@@ -1,9 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "powertrain.h"
 #include "common.h"
 #include "tiremodel.h"
 #include "wheel.h"
+
+typedef struct
+{
+    float c_drag;
+    float frontal_area;
+    float half_cd_a;
+} Body;
+
+Body body_new(float c_drag, float frontal_area)
+{
+    return (Body) { .c_drag = c_drag, .frontal_area = frontal_area, .half_cd_a = 0.5 * c_drag * frontal_area };
+}
+
+float body_air_resistance(const Body* body, float air_density, float longitudinal_velocity)
+{
+    float long_sq = longitudinal_velocity * longitudinal_velocity;
+    return -(air_density * body->half_cd_a * long_sq) * signum(longitudinal_velocity);
+}
 
 int main(void)
 {
@@ -12,11 +31,13 @@ int main(void)
     float mass = 1580.0f;
     float inv_vehicle_mass = 1.0 / mass;
     float gravity = 9.806f;
+    float air_density = 1.2041f;
 
     // Uses iso8855 coordinates
     Vector2f velocity = vector2f_default();
     float yaw = 0.0;
 
+    Body body = body_new(0.36, 1.9);
     Engine* engine = engine_new(1.0 / 0.5);
     Differential diff = (Differential) { .ratio = 2.4, .inv_inertia = 1.0 / 0.18 };
 
@@ -57,7 +78,8 @@ int main(void)
         Vector2f wl_f = wheel_force(wl, &model, fz, 1.0);
         Vector2f wr_f = wheel_force(wr, &model, fz, 1.0);
 
-        Vector2f force = (Vector2f) { .x = wl_f.x + wr_f.x, .y = wl_f.y + wr_f.y };
+        float resitance_force_x = body_air_resistance(&body, air_density, velocity.x);
+        Vector2f force = (Vector2f) { .x = wl_f.x + wr_f.x + resitance_force_x, .y = wl_f.y + wr_f.y };
 
         velocity.x += integrate(force.x, inv_vehicle_mass, dt);
         velocity.y += integrate(force.y, inv_vehicle_mass, dt);
@@ -65,7 +87,7 @@ int main(void)
         engine->angular_velocity =
             differential_velocity(&diff, wl->angular_velocity, wr->angular_velocity);
 
-        printf("Km/h = %f\r", vector2f_length(velocity) / 3.6);
+        printf("Km/h = %f\r", vector2f_length(velocity) * 3.6);
     }
 
     engine_free(engine);
