@@ -13,18 +13,12 @@ Wheel* wheel_new(float inv_inertia, float radius, float toe, Vector2f position)
     return wheel;
 }
 
-void wheel_free(Wheel* wheel)
-{
-    free(wheel);
-}
+void wheel_free(Wheel* wheel) { free(wheel); }
 
-void wheel_change_angle(Wheel* wheel, float angle)
-{
-    wheel->angle = wheel->toe + angle;
-}
+void wheel_change_angle(Wheel* wheel, float angle) { wheel->angle = wheel->toe + angle; }
 
-static Vector2f translate_velocity(Vector2f velocity_cog, float yaw_angular_velocity_cog,
-    Vector2f position)
+static Vector2f translate_velocity(
+    Vector2f velocity_cog, float yaw_angular_velocity_cog, Vector2f position)
 {
     float x = velocity_cog.x - yaw_angular_velocity_cog * position.y;
     float y = velocity_cog.y + yaw_angular_velocity_cog * position.x;
@@ -35,10 +29,12 @@ static Vector2f translate_velocity(Vector2f velocity_cog, float yaw_angular_velo
 void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocity_cog,
     float external_inv_inertia, float torque, float dt)
 {
-    wheel->hub_velocity = translate_velocity(velocity_cog, yaw_angular_velocity_cog, wheel->position);
+    wheel->hub_velocity
+        = translate_velocity(velocity_cog, yaw_angular_velocity_cog, wheel->position);
 
     float total_torque = torque + wheel->reaction_torque;
-    wheel->angular_velocity += integrate(total_torque, external_inv_inertia + wheel->inv_inertia, dt);
+    wheel->angular_velocity
+        += integrate(total_torque, external_inv_inertia + wheel->inv_inertia, dt);
     if (wheel->angular_velocity < 0.0) {
         // TODO: Allow reverse driving
         wheel->angular_velocity = 0.0f;
@@ -52,7 +48,8 @@ static float wheel_reaction_torque(const Wheel* wheel, Vector2f force)
 
 Vector2f wheel_slip(const Wheel* wheel)
 {
-    float slip_x = slip_ratio(wheel->hub_velocity, wheel->angular_velocity, wheel->effective_radius);
+    float slip_x
+        = slip_ratio(wheel->hub_velocity, wheel->angular_velocity, wheel->effective_radius);
     float slip_y = slip_angle(wheel->hub_velocity, wheel->angle);
     return (Vector2f) { .x = slip_x, .y = slip_y };
 }

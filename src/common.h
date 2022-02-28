@@ -2,7 +2,6 @@
 #define RA_COMMON_H
 #include <math.h>
 
-
 #define EPSILON 1.19209290e-07 // From rust stdlib
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288
@@ -10,8 +9,7 @@
 
 typedef float AngularVelocity;
 
-typedef struct
-{
+typedef struct {
     float x, y;
 } Vector2f;
 
@@ -19,8 +17,7 @@ Vector2f vector2f_default(void);
 float vector2f_length(Vector2f v);
 Vector2f vector2f_rotate(Vector2f v, float angle);
 
-typedef struct
-{
+typedef struct {
     float x, y, z;
 } Vector3f;
 

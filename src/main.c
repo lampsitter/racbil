@@ -1,13 +1,11 @@
+#include "common.h"
+#include "powertrain.h"
+#include "tiremodel.h"
+#include "wheel.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <math.h>
-#include "powertrain.h"
-#include "common.h"
-#include "tiremodel.h"
-#include "wheel.h"
-
-
 
 typedef Vector3f Cog;
 
@@ -21,28 +19,15 @@ Cog cog_from_distribution(float ratio_front, float height, float wheelbase)
 }
 
 // TODO: write tests
-float cog_distance_to_front(Cog cog)
-{
-    return cog.x;
-}
+float cog_distance_to_front(Cog cog) { return cog.x; }
 
-float cog_distance_to_rear(Cog cog, float wheelbase)
-{
-    return cog.x - wheelbase;
-}
+float cog_distance_to_rear(Cog cog, float wheelbase) { return cog.x - wheelbase; }
 
-float cog_distance_to_left(Cog cog, float track_width)
-{
-    return track_width * 0.5 - cog.y;
-}
+float cog_distance_to_left(Cog cog, float track_width) { return track_width * 0.5 - cog.y; }
 
-float cog_distance_to_right(Cog cog, float track_width)
-{
-    return cog.y - track_width * 0.5;
-}
+float cog_distance_to_right(Cog cog, float track_width) { return cog.y - track_width * 0.5; }
 
-typedef struct
-{
+typedef struct {
     float c_drag;
     float frontal_area;
     float wheelbase;
@@ -50,10 +35,15 @@ typedef struct
     float half_cd_a;
 } Body;
 
-Body body_new(float c_drag, float frontal_area, float wheelbase, float front_track_width, float rear_track_width)
+Body body_new(float c_drag, float frontal_area, float wheelbase, float front_track_width,
+    float rear_track_width)
 {
-    return (Body) { .c_drag = c_drag, .frontal_area = frontal_area, .half_cd_a = 0.5 * c_drag * frontal_area,
-        .wheelbase = wheelbase, .front_track_width = front_track_width, .rear_track_width = rear_track_width };
+    return (Body) { .c_drag = c_drag,
+        .frontal_area = frontal_area,
+        .half_cd_a = 0.5 * c_drag * frontal_area,
+        .wheelbase = wheelbase,
+        .front_track_width = front_track_width,
+        .rear_track_width = rear_track_width };
 }
 
 float body_air_resistance(const Body* body, float air_density, float longitudinal_velocity)
@@ -83,7 +73,6 @@ int main(void)
 
     Cog cog = cog_from_distribution(0.55, 0.4, body.wheelbase);
 
-
     TireModel model = (TireModel) {
         .bx = 1.9,
         .cx = 1.65,
@@ -103,10 +92,14 @@ int main(void)
         .peak_slip_y = deg_to_rad(20.0f),
     };
 
-    Vector2f fl_pos = (Vector2f) { .x = cog_distance_to_front(cog), .y = cog_distance_to_left(cog, body.front_track_width) };
-    Vector2f fr_pos = (Vector2f) { .x = cog_distance_to_front(cog), .y = cog_distance_to_right(cog, body.front_track_width) };
-    Vector2f rl_pos = (Vector2f) { .x = cog_distance_to_rear(cog, body.wheelbase), .y = cog_distance_to_left(cog, body.rear_track_width) };
-    Vector2f rr_pos = (Vector2f) { .x = cog_distance_to_rear(cog, body.wheelbase), .y = cog_distance_to_right(cog, body.rear_track_width) };
+    Vector2f fl_pos = (Vector2f) { .x = cog_distance_to_front(cog),
+        .y = cog_distance_to_left(cog, body.front_track_width) };
+    Vector2f fr_pos = (Vector2f) { .x = cog_distance_to_front(cog),
+        .y = cog_distance_to_right(cog, body.front_track_width) };
+    Vector2f rl_pos = (Vector2f) { .x = cog_distance_to_rear(cog, body.wheelbase),
+        .y = cog_distance_to_left(cog, body.rear_track_width) };
+    Vector2f rr_pos = (Vector2f) { .x = cog_distance_to_rear(cog, body.wheelbase),
+        .y = cog_distance_to_right(cog, body.rear_track_width) };
 
     assert(fl_pos.x > 0.0 && fl_pos.y > 0.0);
     assert(fr_pos.x > 0.0 && fr_pos.y < 0.0);
@@ -145,10 +138,9 @@ int main(void)
         Vector2f wrr_f = vector2f_rotate(wheel_force(wrr, &model, fz, 1.0), -wrr->angle);
 
         float resitance_force_x = body_air_resistance(&body, air_density, velocity.x);
-        Vector2f force = (Vector2f) {
-            .x = wfl_f.x + wfr_f.x + wrl_f.x + wrr_f.x + resitance_force_x,
-            .y = wfl_f.y + wfr_f.y + wrl_f.y + wrr_f.y
-        };
+        Vector2f force
+            = (Vector2f) { .x = wfl_f.x + wfr_f.x + wrl_f.x + wrr_f.x + resitance_force_x,
+                  .y = wfl_f.y + wfr_f.y + wrl_f.y + wrr_f.y };
 
         printf("Force: %f/%f\n", force.x, force.y);
 
@@ -159,13 +151,13 @@ int main(void)
             velocity.x = 0.0;
         }
 
-        engine->angular_velocity =
-            differential_velocity(&diff, wrl->angular_velocity, wrr->angular_velocity);
+        engine->angular_velocity
+            = differential_velocity(&diff, wrl->angular_velocity, wrr->angular_velocity);
 
         Vector2f slip_front = wheel_slip(wfl);
         Vector2f slip_rear = wheel_slip(wrl);
         printf("Slip F x/y = %.2f/%.2f | Slip R = %.2f/%.2f | ", slip_front.x, slip_front.y,
-                slip_rear.x, slip_rear.y);
+            slip_rear.x, slip_rear.y);
         printf("m/s = %f/%f\n", velocity.x, velocity.y);
 
         // Just to get a feel for the simulation

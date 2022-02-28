@@ -3,8 +3,7 @@
 #include "common.h"
 #include "tiremodel.h"
 
-typedef struct
-{
+typedef struct {
     Vector2f hub_velocity;
     Vector2f position;
 
@@ -19,7 +18,6 @@ typedef struct
 
 Wheel* wheel_new(float inv_inertia, float radius, float toe, Vector2f position);
 void wheel_free(Wheel* wheel);
-
 
 void wheel_change_angle(Wheel* wheel, float angle);
 Vector2f wheel_slip(const Wheel* wheel);
