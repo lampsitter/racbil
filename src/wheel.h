@@ -19,6 +19,7 @@ typedef struct
 Wheel* wheel_new(float inv_inertia, float radius, Vector2f position);
 void wheel_free(Wheel* wheel);
 
+Vector2f wheel_slip(Wheel* wheel);
 void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocity_cog,
     float external_inv_inertia, float torque, float dt);
 Vector2f wheel_force(Wheel* wheel, TireModel* model, float normal_force, float friction_coefficent);

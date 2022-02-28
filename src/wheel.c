@@ -34,20 +34,30 @@ void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocit
 
     float total_torque = torque + wheel->reaction_torque;
     wheel->angular_velocity += integrate(total_torque, external_inv_inertia + wheel->inv_inertia, dt);
+    if (wheel->angular_velocity < 0.0) {
+        // TODO: Allow reverse driving
+        wheel->angular_velocity = 0.0f;
+    }
 }
 
-static inline float wheel_reaction_torque(Wheel* wheel, Vector2f force)
+static float wheel_reaction_torque(Wheel* wheel, Vector2f force)
 {
-    return -(force.x * wheel->effective_radius);
+    return -force.x * wheel->effective_radius;
+}
+
+Vector2f wheel_slip(Wheel* wheel)
+{
+    float slip_x = slip_ratio(wheel->hub_velocity, wheel->angular_velocity, wheel->effective_radius);
+    float slip_y = slip_angle(wheel->hub_velocity, wheel->angle);
+    return (Vector2f) { .x = slip_x, .y = slip_y };
 }
 
 // wheel_update must be called before this function
 Vector2f wheel_force(Wheel* wheel, TireModel* model, float normal_force, float friction_coefficent)
 {
-    float slip_x = slip_ratio(wheel->hub_velocity, wheel->angular_velocity, wheel->effective_radius);
-    float slip_y = slip_angle(wheel->hub_velocity, wheel->angle);
 
-    Vector2f force = tiremodel_force(model, normal_force, slip_x, slip_y, friction_coefficent);
+    Vector2f slip = wheel_slip(wheel);
+    Vector2f force = tiremodel_force(model, normal_force, slip.x, slip.y, friction_coefficent);
     wheel->reaction_torque = wheel_reaction_torque(wheel, force);
     return force;
 }

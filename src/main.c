@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <math.h>
 #include "powertrain.h"
 #include "common.h"
@@ -74,20 +75,32 @@ int main(void)
         wheel_update(wl, velocity, yaw, inv_inertia, left_torque, dt);
         wheel_update(wr, velocity, yaw, inv_inertia, right_torque, dt);
 
-        float fz = mass * gravity * 0.5;
+        float fz = mass * gravity * 0.25;
+        // FIXME: Rotate forces to car coordinates
         Vector2f wl_f = wheel_force(wl, &model, fz, 1.0);
         Vector2f wr_f = wheel_force(wr, &model, fz, 1.0);
+        printf("Force: %f/%f\n", wl_f.x + wr_f.x, wl_f.y + wr_f.y);
 
         float resitance_force_x = body_air_resistance(&body, air_density, velocity.x);
         Vector2f force = (Vector2f) { .x = wl_f.x + wr_f.x + resitance_force_x, .y = wl_f.y + wr_f.y };
 
         velocity.x += integrate(force.x, inv_vehicle_mass, dt);
         velocity.y += integrate(force.y, inv_vehicle_mass, dt);
+        // To prevent inital flip flop. TODO: remove
+        if (velocity.x < 0.0) {
+            velocity.x = 0.0;
+        }
 
         engine->angular_velocity =
             differential_velocity(&diff, wl->angular_velocity, wr->angular_velocity);
 
-        printf("Km/h = %f\r", vector2f_length(velocity) * 3.6);
+        Vector2f slip = wheel_slip(wl);
+        printf("Ang Vel = %.2f(m/s) | ", wl->angular_velocity);
+        printf("Slip x/y = %.2f/%.2f | ", slip.x, slip.y);
+        printf("m/s = %f/%f\n", velocity.x, velocity.y);
+
+        // Just to get a feel for the simulation
+        sleep(dt);
     }
 
     engine_free(engine);
