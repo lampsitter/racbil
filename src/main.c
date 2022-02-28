@@ -7,16 +7,53 @@
 #include "tiremodel.h"
 #include "wheel.h"
 
+
+
+typedef Vector3f Cog;
+
+#include <assert.h>
+// This assumes that the cog is in between each axle
+Cog cog_from_distribution(float ratio_front, float height, float wheelbase)
+{
+    assert(ratio_front >= 0.0 && ratio_front <= 1.0);
+    // FIXME: It is not clear that y is in relation to the middle of the car.
+    return (Cog) { .x = ratio_front * wheelbase, .y = 0.0, .z = height };
+}
+
+// TODO: write tests
+float cog_distance_to_front(Cog cog)
+{
+    return cog.x;
+}
+
+float cog_distance_to_rear(Cog cog, float wheelbase)
+{
+    return cog.x - wheelbase;
+}
+
+float cog_distance_to_left(Cog cog, float track_width)
+{
+    return track_width * 0.5 - cog.y;
+}
+
+float cog_distance_to_right(Cog cog, float track_width)
+{
+    return cog.y - track_width * 0.5;
+}
+
 typedef struct
 {
     float c_drag;
     float frontal_area;
+    float wheelbase;
+    float front_track_width, rear_track_width;
     float half_cd_a;
 } Body;
 
-Body body_new(float c_drag, float frontal_area)
+Body body_new(float c_drag, float frontal_area, float wheelbase, float front_track_width, float rear_track_width)
 {
-    return (Body) { .c_drag = c_drag, .frontal_area = frontal_area, .half_cd_a = 0.5 * c_drag * frontal_area };
+    return (Body) { .c_drag = c_drag, .frontal_area = frontal_area, .half_cd_a = 0.5 * c_drag * frontal_area,
+        .wheelbase = wheelbase, .front_track_width = front_track_width, .rear_track_width = rear_track_width };
 }
 
 float body_air_resistance(const Body* body, float air_density, float longitudinal_velocity)
@@ -38,9 +75,12 @@ int main(void)
     Vector2f velocity = vector2f_default();
     float yaw = 0.0;
 
-    Body body = body_new(0.36, 1.9);
+    Body body = body_new(0.36, 1.9, 3.6f, 1.47f, 1.475f);
     Engine* engine = engine_new(1.0 / 0.5);
     Differential diff = (Differential) { .ratio = 2.4, .inv_inertia = 1.0 / 0.18 };
+
+    Cog cog = cog_from_distribution(0.55, 0.4, body.wheelbase);
+
 
     TireModel model = (TireModel) {
         .bx = 1.9,
@@ -61,11 +101,21 @@ int main(void)
         .peak_slip_y = deg_to_rad(20.0f),
     };
 
-    Wheel* wfl = wheel_new(1.0 / 0.6, 0.344, vector2f_default());
-    Wheel* wfr = wheel_new(1.0 / 0.6, 0.344, vector2f_default());
+    Vector2f fl_pos = (Vector2f) { .x = cog_distance_to_front(cog), .y = cog_distance_to_left(cog, body.front_track_width) };
+    Vector2f fr_pos = (Vector2f) { .x = cog_distance_to_front(cog), .y = cog_distance_to_right(cog, body.front_track_width) };
+    Vector2f rl_pos = (Vector2f) { .x = cog_distance_to_rear(cog, body.wheelbase), .y = cog_distance_to_left(cog, body.rear_track_width) };
+    Vector2f rr_pos = (Vector2f) { .x = cog_distance_to_rear(cog, body.wheelbase), .y = cog_distance_to_right(cog, body.rear_track_width) };
 
-    Wheel* wrl = wheel_new(1.0 / 0.6, 0.344, vector2f_default());
-    Wheel* wrr = wheel_new(1.0 / 0.6, 0.344, vector2f_default());
+    assert(fl_pos.x > 0.0 && fl_pos.y > 0.0);
+    assert(fr_pos.x > 0.0 && fr_pos.y < 0.0);
+    assert(rl_pos.x < 0.0 && rl_pos.y > 0.0);
+    assert(rr_pos.x < 0.0 && rr_pos.y < 0.0);
+
+    Wheel* wfl = wheel_new(1.0 / 0.6, 0.344, fl_pos);
+    Wheel* wfr = wheel_new(1.0 / 0.6, 0.344, fr_pos);
+
+    Wheel* wrl = wheel_new(1.0 / 0.6, 0.344, rl_pos);
+    Wheel* wrr = wheel_new(1.0 / 0.6, 0.344, rr_pos);
 
     while (1) {
         float torque = engine_torque(engine, throttle_pos);
