@@ -14,9 +14,10 @@ typedef struct
     float unloaded_radius;
     float effective_radius;
     float reaction_torque;
+    float toe;
 } Wheel;
 
-Wheel* wheel_new(float inv_inertia, float radius, Vector2f position);
+Wheel* wheel_new(float inv_inertia, float radius, float toe, Vector2f position);
 void wheel_free(Wheel* wheel);
 
 Vector2f wheel_slip(Wheel* wheel);

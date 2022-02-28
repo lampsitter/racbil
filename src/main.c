@@ -111,11 +111,11 @@ int main(void)
     assert(rl_pos.x < 0.0 && rl_pos.y > 0.0);
     assert(rr_pos.x < 0.0 && rr_pos.y < 0.0);
 
-    Wheel* wfl = wheel_new(1.0 / 0.6, 0.344, fl_pos);
-    Wheel* wfr = wheel_new(1.0 / 0.6, 0.344, fr_pos);
+    Wheel* wfl = wheel_new(1.0 / 0.6, 0.344, -0.2, fl_pos);
+    Wheel* wfr = wheel_new(1.0 / 0.6, 0.344, 0.2, fr_pos);
 
-    Wheel* wrl = wheel_new(1.0 / 0.6, 0.344, rl_pos);
-    Wheel* wrr = wheel_new(1.0 / 0.6, 0.344, rr_pos);
+    Wheel* wrl = wheel_new(1.0 / 0.6, 0.344, -0.5, rl_pos);
+    Wheel* wrr = wheel_new(1.0 / 0.6, 0.344, 0.5, rr_pos);
 
     while (1) {
         float torque = engine_torque(engine, throttle_pos);
