@@ -4,7 +4,6 @@ project(
     default_options: [
         'c_std=c11',
         'warning_level=2',
-        'werror=true'
     ],
 )
 
@@ -15,6 +14,12 @@ source = files(
   'src/powertrain.h',
   'src/powertrain.c',
   'src/main.c',
+  'src/common.c',
+  'src/common.h',
+  'src/tiremodel.c',
+  'src/tiremodel.h',
+  'src/wheel.c',
+  'src/wheel.h',
 )
 
 m_dep = cc.find_library('m')

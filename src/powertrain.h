@@ -1,7 +1,6 @@
 #ifndef POWERTRAIN_H
 #define POWERTRAIN_H
-
-typedef float AngularVelocity;
+#include "common.h"
 
 typedef struct
 {
@@ -23,4 +22,5 @@ typedef struct
 
 void differential_torque(Differential* diff, float input_torque, float* output_left_torque, float* output_right_torque);
 float differential_velocity(Differential* diff, float left_angular_velocity, float right_angular_velocity);
+
 #endif /* POWERTRAIN_H */
