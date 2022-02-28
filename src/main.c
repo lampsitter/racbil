@@ -68,7 +68,7 @@ int main(void)
     float yaw = 0.0;
 
     Body body = body_new(0.36, 1.9, 3.6f, 1.47f, 1.475f);
-    Engine* engine = engine_new(1.0 / 0.5);
+    Engine engine = engine_new(1.0 / 0.5);
     Differential diff = (Differential) { .ratio = 2.4, .inv_inertia = 1.0 / 0.18 };
 
     Cog cog = cog_from_distribution(0.55, 0.4, body.wheelbase);
@@ -106,36 +106,35 @@ int main(void)
     assert(rl_pos.x < 0.0 && rl_pos.y > 0.0);
     assert(rr_pos.x < 0.0 && rr_pos.y < 0.0);
 
-    Wheel* wfl = wheel_new(1.0 / 0.6, 0.344, -0.2, fl_pos);
-    Wheel* wfr = wheel_new(1.0 / 0.6, 0.344, 0.2, fr_pos);
+    Wheel wfl = wheel_new(1.0 / 0.6, 0.344, -0.2, fl_pos);
+    Wheel wfr = wheel_new(1.0 / 0.6, 0.344, 0.2, fr_pos);
 
-    Wheel* wrl = wheel_new(1.0 / 0.6, 0.344, -0.5, rl_pos);
-    Wheel* wrr = wheel_new(1.0 / 0.6, 0.344, 0.5, rr_pos);
+    Wheel wrl = wheel_new(1.0 / 0.6, 0.344, -0.5, rl_pos);
+    Wheel wrr = wheel_new(1.0 / 0.6, 0.344, 0.5, rr_pos);
 
     while (1) {
-        wheel_change_angle(wfl, steering_angle);
-        wheel_change_angle(wfr, steering_angle);
+        wheel_change_angle(&wfl, steering_angle);
+        wheel_change_angle(&wfr, steering_angle);
 
-        float torque = engine_torque(engine, throttle_pos);
-        float inv_inertia = engine->inv_inertia + diff.inv_inertia;
+        float torque = engine_torque(&engine, throttle_pos);
+        float inv_inertia = engine.inv_inertia + diff.inv_inertia;
 
         float left_torque;
         float right_torque;
         differential_torque(&diff, torque, &left_torque, &right_torque);
 
-        wheel_update(wfl, velocity, yaw, 0.0, 0.0f, dt);
-        wheel_update(wfr, velocity, yaw, 0.0, 0.0f, dt);
+        wheel_update(&wfl, velocity, yaw, 0.0, 0.0f, dt);
+        wheel_update(&wfr, velocity, yaw, 0.0, 0.0f, dt);
 
-        wheel_update(wrl, velocity, yaw, inv_inertia, left_torque, dt);
-        wheel_update(wrr, velocity, yaw, inv_inertia, right_torque, dt);
+        wheel_update(&wrl, velocity, yaw, inv_inertia, left_torque, dt);
+        wheel_update(&wrr, velocity, yaw, inv_inertia, right_torque, dt);
 
         float fz = mass * gravity * 0.25;
-        // FIXME: Rotate forces to car coordinates
 
-        Vector2f wfl_f = vector2f_rotate(wheel_force(wfl, &model, fz, 1.0), -wfl->angle);
-        Vector2f wfr_f = vector2f_rotate(wheel_force(wfr, &model, fz, 1.0), -wfr->angle);
-        Vector2f wrl_f = vector2f_rotate(wheel_force(wrl, &model, fz, 1.0), -wrl->angle);
-        Vector2f wrr_f = vector2f_rotate(wheel_force(wrr, &model, fz, 1.0), -wrr->angle);
+        Vector2f wfl_f = vector2f_rotate(wheel_force(&wfl, &model, fz, 1.0), -wfl.angle);
+        Vector2f wfr_f = vector2f_rotate(wheel_force(&wfr, &model, fz, 1.0), -wfr.angle);
+        Vector2f wrl_f = vector2f_rotate(wheel_force(&wrl, &model, fz, 1.0), -wrl.angle);
+        Vector2f wrr_f = vector2f_rotate(wheel_force(&wrr, &model, fz, 1.0), -wrr.angle);
 
         float resitance_force_x = body_air_resistance(&body, air_density, velocity.x);
         Vector2f force
@@ -151,11 +150,11 @@ int main(void)
             velocity.x = 0.0;
         }
 
-        engine->angular_velocity
-            = differential_velocity(&diff, wrl->angular_velocity, wrr->angular_velocity);
+        engine.angular_velocity
+            = differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity);
 
-        Vector2f slip_front = wheel_slip(wfl);
-        Vector2f slip_rear = wheel_slip(wrl);
+        Vector2f slip_front = wheel_slip(&wfl);
+        Vector2f slip_rear = wheel_slip(&wrl);
         printf("Slip F x/y = %.2f/%.2f | Slip R = %.2f/%.2f | ", slip_front.x, slip_front.y,
             slip_rear.x, slip_rear.y);
         printf("m/s = %f/%f\n", velocity.x, velocity.y);
@@ -164,10 +163,5 @@ int main(void)
         sleep(dt);
     }
 
-    engine_free(engine);
-    wheel_free(wfl);
-    wheel_free(wfr);
-    wheel_free(wrl);
-    wheel_free(wrr);
     return 0;
 }

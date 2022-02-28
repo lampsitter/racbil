@@ -9,9 +9,8 @@ typedef struct {
     float torque;
 } Engine;
 
-Engine* engine_new(float inv_inertia);
+Engine engine_new(float inv_inertia);
 float engine_torque(Engine* engine, float throttle_pos);
-void engine_free(Engine* engine);
 
 typedef struct {
     float ratio;

@@ -1,19 +1,18 @@
 #include "wheel.h"
-#include <stdlib.h>
 
-Wheel* wheel_new(float inv_inertia, float radius, float toe, Vector2f position)
+Wheel wheel_new(float inv_inertia, float radius, float toe, Vector2f position)
 {
-    Wheel* wheel = malloc(sizeof *wheel);
-    wheel->inv_inertia = inv_inertia;
-    wheel->effective_radius = wheel->unloaded_radius = radius;
-    wheel->position = position;
-    wheel->hub_velocity = vector2f_default();
-    wheel->angle = wheel->toe = toe;
-    wheel->reaction_torque = 0.0f;
-    return wheel;
+    return (Wheel) {
+        .inv_inertia = inv_inertia,
+        .effective_radius = radius,
+        .unloaded_radius = radius,
+        .position = position,
+        .hub_velocity = vector2f_default(),
+        .angle = toe,
+        .toe = toe,
+        .reaction_torque = 0.0f,
+    };
 }
-
-void wheel_free(Wheel* wheel) { free(wheel); }
 
 void wheel_change_angle(Wheel* wheel, float angle) { wheel->angle = wheel->toe + angle; }
 
