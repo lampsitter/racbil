@@ -61,8 +61,11 @@ int main(void)
         .peak_slip_y = deg_to_rad(20.0f),
     };
 
-    Wheel* wl = wheel_new(1.0 / 0.6, 0.344, vector2f_default());
-    Wheel* wr = wheel_new(1.0 / 0.6, 0.344, vector2f_default());
+    Wheel* wfl = wheel_new(1.0 / 0.6, 0.344, vector2f_default());
+    Wheel* wfr = wheel_new(1.0 / 0.6, 0.344, vector2f_default());
+
+    Wheel* wrl = wheel_new(1.0 / 0.6, 0.344, vector2f_default());
+    Wheel* wrr = wheel_new(1.0 / 0.6, 0.344, vector2f_default());
 
     while (1) {
         float torque = engine_torque(engine, throttle_pos);
@@ -72,17 +75,27 @@ int main(void)
         float right_torque;
         differential_torque(&diff, torque, &left_torque, &right_torque);
 
-        wheel_update(wl, velocity, yaw, inv_inertia, left_torque, dt);
-        wheel_update(wr, velocity, yaw, inv_inertia, right_torque, dt);
+        wheel_update(wfl, velocity, yaw, 0.0, 0.0f, dt);
+        wheel_update(wfr, velocity, yaw, 0.0, 0.0f, dt);
+
+        wheel_update(wrl, velocity, yaw, inv_inertia, left_torque, dt);
+        wheel_update(wrr, velocity, yaw, inv_inertia, right_torque, dt);
 
         float fz = mass * gravity * 0.25;
         // FIXME: Rotate forces to car coordinates
-        Vector2f wl_f = wheel_force(wl, &model, fz, 1.0);
-        Vector2f wr_f = wheel_force(wr, &model, fz, 1.0);
-        printf("Force: %f/%f\n", wl_f.x + wr_f.x, wl_f.y + wr_f.y);
+
+        Vector2f wfl_f = wheel_force(wfl, &model, fz, 1.0);
+        Vector2f wfr_f = wheel_force(wfr, &model, fz, 1.0);
+        Vector2f wrl_f = wheel_force(wrl, &model, fz, 1.0);
+        Vector2f wrr_f = wheel_force(wrr, &model, fz, 1.0);
 
         float resitance_force_x = body_air_resistance(&body, air_density, velocity.x);
-        Vector2f force = (Vector2f) { .x = wl_f.x + wr_f.x + resitance_force_x, .y = wl_f.y + wr_f.y };
+        Vector2f force = (Vector2f) {
+            .x = wfl_f.x + wfr_f.x + wrl_f.x + wrr_f.x + resitance_force_x,
+            .y = wfl_f.y + wfr_f.y + wrl_f.y + wrr_f.y
+        };
+
+        printf("Force: %f/%f\n", force.x, force.y);
 
         velocity.x += integrate(force.x, inv_vehicle_mass, dt);
         velocity.y += integrate(force.y, inv_vehicle_mass, dt);
@@ -92,11 +105,12 @@ int main(void)
         }
 
         engine->angular_velocity =
-            differential_velocity(&diff, wl->angular_velocity, wr->angular_velocity);
+            differential_velocity(&diff, wrl->angular_velocity, wrr->angular_velocity);
 
-        Vector2f slip = wheel_slip(wl);
-        printf("Ang Vel = %.2f(m/s) | ", wl->angular_velocity);
-        printf("Slip x/y = %.2f/%.2f | ", slip.x, slip.y);
+        Vector2f slip_front = wheel_slip(wfl);
+        Vector2f slip_rear = wheel_slip(wrl);
+        printf("Slip F x/y = %.2f/%.2f | Slip R = %.2f/%.2f | ", slip_front.x, slip_front.y,
+                slip_rear.x, slip_rear.y);
         printf("m/s = %f/%f\n", velocity.x, velocity.y);
 
         // Just to get a feel for the simulation
@@ -104,7 +118,9 @@ int main(void)
     }
 
     engine_free(engine);
-    wheel_free(wl);
-    wheel_free(wr);
+    wheel_free(wfl);
+    wheel_free(wfr);
+    wheel_free(wrl);
+    wheel_free(wrr);
     return 0;
 }
