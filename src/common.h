@@ -17,6 +17,7 @@ typedef struct
 
 Vector2f vector2f_default(void);
 float vector2f_length(Vector2f v);
+Vector2f vector2f_rotate(Vector2f v, float angle);
 
 typedef struct
 {

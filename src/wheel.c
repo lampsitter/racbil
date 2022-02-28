@@ -18,6 +18,11 @@ void wheel_free(Wheel* wheel)
     free(wheel);
 }
 
+void wheel_change_angle(Wheel* wheel, float angle)
+{
+    wheel->angle = wheel->toe + angle;
+}
+
 static Vector2f translate_velocity(Vector2f velocity_cog, float yaw_angular_velocity_cog,
     Vector2f position)
 {
@@ -40,12 +45,12 @@ void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocit
     }
 }
 
-static float wheel_reaction_torque(Wheel* wheel, Vector2f force)
+static float wheel_reaction_torque(const Wheel* wheel, Vector2f force)
 {
     return -force.x * wheel->effective_radius;
 }
 
-Vector2f wheel_slip(Wheel* wheel)
+Vector2f wheel_slip(const Wheel* wheel)
 {
     float slip_x = slip_ratio(wheel->hub_velocity, wheel->angular_velocity, wheel->effective_radius);
     float slip_y = slip_angle(wheel->hub_velocity, wheel->angle);

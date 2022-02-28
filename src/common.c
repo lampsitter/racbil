@@ -11,6 +11,16 @@ float vector2f_length(Vector2f v)
     return sqrtf(v.x * v.x + v.y * v.y);
 }
 
+Vector2f vector2f_rotate(Vector2f v, float angle)
+{
+    float a_sin = sin(angle);
+    float a_cos = cos(angle);
+    float x = v.x * a_cos - v.y * a_sin;
+    float y = v.x * a_sin + v.y * a_cos;
+
+    return (Vector2f) { .x = x, .y = y };
+}
+
 Vector3f vector3f_default(void)
 {
     return (Vector3f) { .x = 0.0f, .y = 0.0f, .z = 0.0f };

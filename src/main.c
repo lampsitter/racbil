@@ -65,6 +65,8 @@ float body_air_resistance(const Body* body, float air_density, float longitudina
 int main(void)
 {
     float throttle_pos = 1.0;
+    float steering_angle = 0.0;
+
     float dt = 1.0 / 50.0;
     float mass = 1580.0f;
     float inv_vehicle_mass = 1.0 / mass;
@@ -118,6 +120,9 @@ int main(void)
     Wheel* wrr = wheel_new(1.0 / 0.6, 0.344, 0.5, rr_pos);
 
     while (1) {
+        wheel_change_angle(wfl, steering_angle);
+        wheel_change_angle(wfr, steering_angle);
+
         float torque = engine_torque(engine, throttle_pos);
         float inv_inertia = engine->inv_inertia + diff.inv_inertia;
 
@@ -134,10 +139,10 @@ int main(void)
         float fz = mass * gravity * 0.25;
         // FIXME: Rotate forces to car coordinates
 
-        Vector2f wfl_f = wheel_force(wfl, &model, fz, 1.0);
-        Vector2f wfr_f = wheel_force(wfr, &model, fz, 1.0);
-        Vector2f wrl_f = wheel_force(wrl, &model, fz, 1.0);
-        Vector2f wrr_f = wheel_force(wrr, &model, fz, 1.0);
+        Vector2f wfl_f = vector2f_rotate(wheel_force(wfl, &model, fz, 1.0), -wfl->angle);
+        Vector2f wfr_f = vector2f_rotate(wheel_force(wfr, &model, fz, 1.0), -wfr->angle);
+        Vector2f wrl_f = vector2f_rotate(wheel_force(wrl, &model, fz, 1.0), -wrl->angle);
+        Vector2f wrr_f = vector2f_rotate(wheel_force(wrr, &model, fz, 1.0), -wrr->angle);
 
         float resitance_force_x = body_air_resistance(&body, air_density, velocity.x);
         Vector2f force = (Vector2f) {
