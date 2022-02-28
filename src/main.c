@@ -10,6 +10,51 @@
 typedef Vector3f Cog;
 
 #include <assert.h>
+
+typedef struct {
+    int num_gears;
+    int curr_gear;
+    float reverse_ratio;
+    float reverse_inertia;
+    float* ratios;
+    float* inertias;
+} Transmission;
+
+Transmission transmission_new(
+    float num_gears, float* ratios, float* inertias, float reverse_ratio, float reverse_inertia)
+{
+    return (Transmission) { .num_gears = num_gears,
+        .ratios = ratios,
+        .inertias = inertias,
+        .reverse_ratio = reverse_ratio,
+        .reverse_inertia = reverse_inertia,
+        .curr_gear = 0 };
+}
+
+float transmission_ratio(const Transmission* trans)
+{
+    int curr_gear = trans->curr_gear;
+    if (curr_gear < 0) {
+        return trans->reverse_ratio;
+    } else if (curr_gear == 0) {
+        return 0;
+    } else {
+        return trans->ratios[curr_gear - 1];
+    }
+}
+
+float transmission_inertia(const Transmission* trans)
+{
+    int curr_gear = trans->curr_gear;
+    if (curr_gear < 0) {
+        return trans->reverse_inertia;
+    } else if (curr_gear == 0) {
+        return 0;
+    } else {
+        return trans->inertias[curr_gear - 1];
+    }
+}
+
 // This assumes that the cog is in between each axle
 Cog cog_from_distribution(float ratio_front, float height, float wheelbase)
 {
@@ -18,7 +63,6 @@ Cog cog_from_distribution(float ratio_front, float height, float wheelbase)
     return (Cog) { .x = ratio_front * wheelbase, .y = 0.0, .z = height };
 }
 
-// TODO: write tests
 float cog_distance_to_front(Cog cog) { return cog.x; }
 
 float cog_distance_to_rear(Cog cog, float wheelbase) { return cog.x - wheelbase; }
@@ -69,6 +113,26 @@ int main(void)
 
     Body body = body_new(0.36, 1.9, 3.6f, 1.47f, 1.475f);
     Engine engine = engine_new(1.0 / 0.5);
+
+    int num_gears = 6;
+    float* ratios = malloc(sizeof *ratios * num_gears);
+    ratios[0] = 3.2;
+    ratios[1] = 2.31;
+    ratios[2] = 1.82;
+    ratios[3] = 1.52;
+    ratios[4] = 1.3;
+    ratios[5] = 1.0;
+    float* inertias = malloc(sizeof *inertias * num_gears);
+    inertias[0] = 0.2;
+    inertias[1] = 0.18;
+    inertias[2] = 0.16;
+    inertias[3] = 0.15;
+    inertias[4] = 0.14;
+    inertias[5] = 0.1;
+
+    Transmission trans = transmission_new(num_gears, ratios, inertias, -1.6, 0.95);
+    trans.curr_gear = 1;
+
     Differential diff = (Differential) { .ratio = 2.4, .inv_inertia = 1.0 / 0.18 };
 
     Cog cog = cog_from_distribution(0.55, 0.4, body.wheelbase);
@@ -116,12 +180,14 @@ int main(void)
         wheel_change_angle(&wfl, steering_angle);
         wheel_change_angle(&wfr, steering_angle);
 
-        float torque = engine_torque(&engine, throttle_pos);
-        float inv_inertia = engine.inv_inertia + diff.inv_inertia;
+        float t_ratio = transmission_ratio(&trans);
+        float eng_torque = engine_torque(&engine, throttle_pos);
+        float trans_torque = eng_torque * t_ratio;
+        float inv_inertia = engine.inv_inertia + diff.inv_inertia + transmission_inertia(&trans);
 
         float left_torque;
         float right_torque;
-        differential_torque(&diff, torque, &left_torque, &right_torque);
+        differential_torque(&diff, trans_torque, &left_torque, &right_torque);
 
         wheel_update(&wfl, velocity, yaw, 0.0, 0.0f, dt);
         wheel_update(&wfr, velocity, yaw, 0.0, 0.0f, dt);
@@ -151,7 +217,7 @@ int main(void)
         }
 
         engine.angular_velocity
-            = differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity);
+            = differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity) * t_ratio;
 
         Vector2f slip_front = wheel_slip(&wfl);
         Vector2f slip_rear = wheel_slip(&wrl);
@@ -162,6 +228,9 @@ int main(void)
         // Just to get a feel for the simulation
         sleep(dt);
     }
+
+    free(ratios);
+    free(inertias);
 
     return 0;
 }
