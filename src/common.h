@@ -1,6 +1,7 @@
 #ifndef RA_COMMON_H
 #define RA_COMMON_H
 #include <math.h>
+#include <sys/types.h>
 
 #define EPSILON 1.19209290e-07 // From rust stdlib
 #ifndef M_PI
@@ -29,5 +30,15 @@ float integrate(float torque, float inv_inertia, float dt);
 float rad_to_deg(float radians);
 float deg_to_rad(float degrees);
 float signum(float v);
+
+typedef struct {
+    float* elements;
+    size_t capacity;
+    size_t len;
+} VecFloat;
+
+VecFloat vec_with_capacity(int capacity);
+void vec_push_float(VecFloat* v, float element);
+void vec_free(VecFloat* v);
 
 #endif /* RA_COMMON_H */

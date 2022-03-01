@@ -1,5 +1,6 @@
 #include "common.h"
 #include <math.h>
+#include <stdlib.h>
 
 Vector2f vector2f_default(void) { return (Vector2f) { .x = 0.0f, .y = 0.0f }; }
 
@@ -26,3 +27,27 @@ float rad_to_deg(float radians) { return radians * (180.0 / M_PI); }
 float deg_to_rad(float degrees) { return (degrees * M_PI) / 180.0; }
 
 float signum(float v) { return (copysignf(1.0, v)); }
+
+VecFloat vec_with_capacity(int capacity)
+{
+    float* elements = malloc(sizeof *elements * capacity);
+
+    return (VecFloat) { .elements = elements, .capacity = capacity, .len = 0 };
+}
+
+void vec_push_float(VecFloat* v, float element)
+{
+    if (v->capacity == v->len) {
+        v->capacity *= 2;
+        v->elements = realloc(v->elements, sizeof *v->elements * v->capacity);
+    }
+
+    v->elements[v->len] = element;
+    v->len += 1;
+}
+
+void vec_free(VecFloat* v)
+{
+    free(v->elements);
+    v->elements = NULL;
+}

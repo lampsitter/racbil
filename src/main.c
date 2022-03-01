@@ -28,22 +28,23 @@ int main(void)
     Engine engine = engine_new(1.0 / 0.5);
 
     int num_gears = 6;
-    float* ratios = malloc(sizeof *ratios * num_gears);
-    ratios[0] = 3.2;
-    ratios[1] = 2.31;
-    ratios[2] = 1.82;
-    ratios[3] = 1.52;
-    ratios[4] = 1.3;
-    ratios[5] = 1.0;
-    float* inertias = malloc(sizeof *inertias * num_gears);
-    inertias[0] = 0.2;
-    inertias[1] = 0.18;
-    inertias[2] = 0.16;
-    inertias[3] = 0.15;
-    inertias[4] = 0.14;
-    inertias[5] = 0.1;
+    VecFloat ratios = vec_with_capacity(num_gears);
+    vec_push_float(&ratios, 3.2);
+    vec_push_float(&ratios, 2.31);
+    vec_push_float(&ratios, 1.82);
+    vec_push_float(&ratios, 1.52);
+    vec_push_float(&ratios, 1.3);
+    vec_push_float(&ratios, 1.0);
 
-    Gearbox gb = gearbox_new(num_gears, ratios, inertias, -1.6, 0.95);
+    VecFloat inertias = vec_with_capacity(num_gears);
+    vec_push_float(&inertias, 0.2);
+    vec_push_float(&inertias, 0.18);
+    vec_push_float(&inertias, 0.16);
+    vec_push_float(&inertias, 0.15);
+    vec_push_float(&inertias, 0.14);
+    vec_push_float(&inertias, 0.1);
+
+    Gearbox gb = gearbox_new(ratios, inertias, -1.6, 0.95);
     gb.curr_gear = 1;
 
     Differential diff = (Differential) { .ratio = 2.4, .inv_inertia = 1.0 / 0.18 };
@@ -142,8 +143,7 @@ int main(void)
         sleep(dt);
     }
 
-    free(ratios);
-    free(inertias);
+    gearbox_free(&gb);
 
     return 0;
 }

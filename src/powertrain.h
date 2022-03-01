@@ -23,16 +23,15 @@ float differential_velocity(
     Differential* diff, float left_angular_velocity, float right_angular_velocity);
 
 typedef struct {
-    int num_gears;
     int curr_gear;
     float reverse_ratio;
     float reverse_inertia;
-    float* ratios;
-    float* inertias;
+    VecFloat ratios;
+    VecFloat inertias;
 } Gearbox;
 
-Gearbox gearbox_new(
-    float num_gears, float* ratios, float* inertias, float reverse_ratio, float reverse_inertia);
+Gearbox gearbox_new(VecFloat ratios, VecFloat inertias, float reverse_ratio, float reverse_inertia);
+void gearbox_free(Gearbox* gb);
 float gearbox_ratio(const Gearbox* trans);
 float gearbox_inertia(const Gearbox* trans);
 #endif /* POWERTRAIN_H */
