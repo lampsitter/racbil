@@ -41,4 +41,16 @@ VecFloat vec_with_capacity(int capacity);
 void vec_push_float(VecFloat* v, float element);
 void vec_free(VecFloat* v);
 
+/** A table with sorted x and y from lowest to highest */
+typedef struct {
+    size_t x_capacity, y_capacity;
+    float* x;
+    float* y;
+    float** z;
+} Table;
+
+Table table_with_capacity(size_t x_elements, size_t y_elements);
+void table_free(Table* table);
+float table_lookup(Table* table, float x, float y);
+
 #endif /* RA_COMMON_H */

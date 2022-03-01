@@ -4,6 +4,7 @@
 
 typedef Vector3f Cog;
 
+/** This assumes that the cog is in between each axle */
 Cog cog_from_distribution(float ratio_front, float height, float wheelbase);
 float cog_distance_to_front(Cog cog);
 float cog_distance_to_rear(Cog cog, float wheelbase);

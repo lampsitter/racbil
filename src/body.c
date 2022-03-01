@@ -1,7 +1,6 @@
 #include "body.h"
 #include <assert.h>
 
-// This assumes that the cog is in between each axle
 Cog cog_from_distribution(float ratio_front, float height, float wheelbase)
 {
     assert(ratio_front >= 0.0 && ratio_front <= 1.0);

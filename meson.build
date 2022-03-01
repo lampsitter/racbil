@@ -7,7 +7,6 @@ project(
     ],
 )
 
-
 cc = meson.get_compiler('c')
 
 source = files(
@@ -28,4 +27,8 @@ m_dep = cc.find_library('m')
 executable('c_racbil', ['src/main.c', source], dependencies: m_dep)
 
 library('c_racbil', ['src/lib.c', source], dependencies: m_dep)
+
+
+t = executable('test_common', ['src/tests/common.c', source], dependencies: m_dep)
+test('c_racbil', t)
 

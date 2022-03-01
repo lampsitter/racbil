@@ -3,20 +3,20 @@
 #include "common.h"
 
 // TODO: Add alignment moment
+/** *x = longitudinal, *y = lateral *mz = alignment moment */
 typedef struct {
-    // *x = longitudinal, *y = lateral *mz = alignment moment
 
-    // Stiffness factor
+    /** Stiffness factor */
     float bx, by;
-    // Shape
+    /** Shape */
     float cx, cy;
-    // Peak
+    /** Peak */
     float dx, dy;
-    // Curvature
+    /** Curvature */
     float ex, ey;
-    // Vertical offset
+    /** Vertical offset */
     float vvx, vvy;
-    // Horisontal offset
+    /** Horisontal offset */
     float vhx, vhy;
 
     float peak_slip_x, peak_slip_y;

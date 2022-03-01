@@ -53,7 +53,6 @@ Vector2f wheel_slip(const Wheel* wheel)
     return (Vector2f) { .x = slip_x, .y = slip_y };
 }
 
-// wheel_update must be called before this function
 Vector2f wheel_force(Wheel* wheel, TireModel* model, float normal_force, float friction_coefficent)
 {
 

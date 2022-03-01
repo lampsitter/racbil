@@ -22,6 +22,10 @@ void wheel_change_angle(Wheel* wheel, float angle);
 Vector2f wheel_slip(const Wheel* wheel);
 void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocity_cog,
     float external_inv_inertia, float torque, float dt);
+
+/**
+ * wheel_update must be called before this function
+ */
 Vector2f wheel_force(Wheel* wheel, TireModel* model, float normal_force, float friction_coefficent);
 
 #endif /* RA_WHEEL_H */
