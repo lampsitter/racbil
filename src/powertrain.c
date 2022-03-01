@@ -1,5 +1,6 @@
 #include "powertrain.h"
 #include "common.h"
+#include <stdbool.h>
 #include <stdlib.h>
 
 Engine engine_new(float inertia, Table torque_map, float max_map_rpm, float max_map_torque)
@@ -44,11 +45,14 @@ float differential_velocity(
 
 Gearbox gearbox_new(VecFloat ratios, VecFloat inertias, float reverse_ratio, float reverse_inertia)
 {
-    return (Gearbox) { .ratios = ratios,
+    return (Gearbox) {
+        .ratios = ratios,
         .inertias = inertias,
         .reverse_ratio = reverse_ratio,
         .reverse_inertia = reverse_inertia,
-        .curr_gear = 0 };
+        .curr_gear = 0,
+        .input_angular_velocity = 0.0,
+    };
 }
 
 void gearbox_free(Gearbox* gb)
@@ -78,5 +82,50 @@ float gearbox_inertia(const Gearbox* trans)
         return 0;
     } else {
         return trans->inertias.elements[curr_gear - 1];
+    }
+}
+
+// Calculate max normal force from desired torque caracheristics of the clutch.
+Clutch clutch_with_torque(
+    float* max_normal_force, float max_static_torque, float max_kinetic_torque)
+{
+    *max_normal_force = max_static_torque;
+    float static_coefficient = 1.0f;
+    float kinetic_coefficient = max_kinetic_torque / *max_normal_force;
+
+    return (Clutch) { .static_coefficient = static_coefficient,
+        .kinetic_coefficient = kinetic_coefficient,
+        .is_locked = false };
+}
+
+static inline float tanh_friction(float torque, AngularVelocity vel_diff, float transition)
+{
+    return torque * tanh(2.0 * (vel_diff / transition));
+}
+
+void clutch_torque_out(Clutch* clutch, float torque_in, float normal_force,
+    AngularVelocity left_vel, AngularVelocity right_vel, float* torque_left, float* torque_right)
+{
+    float vel_diff = left_vel - right_vel;
+    // The whole formula is technically (2/3) * effective_radius * normal_force *
+    // static_coefficient. For simplisity (2/3) * effective_radius is dropped, reducing the amount
+    // of variables that need to be configured. It can be compensated for by including it in the
+    // input normal force if necessary.
+    float static_torque = clutch->static_coefficient * normal_force;
+
+    float threshold = 0.1;
+    float torque_sensitivity = 0.1;
+    if (fabsf(vel_diff) < threshold && fabsf(torque_in) <= static_torque) {
+        // Locked
+        *torque_left = torque_in;
+        *torque_right = torque_in;
+        clutch->is_locked = true;
+    } else {
+        // Slipping
+        float kinetic_torque = clutch->kinetic_coefficient * normal_force;
+        float out_torque = tanh_friction(kinetic_torque, vel_diff, torque_sensitivity);
+        *torque_left = torque_in - out_torque;
+        *torque_right = out_torque;
+        clutch->is_locked = false;
     }
 }

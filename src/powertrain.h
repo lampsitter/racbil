@@ -1,6 +1,7 @@
 #ifndef POWERTRAIN_H
 #define POWERTRAIN_H
 #include "common.h"
+#include <stdbool.h>
 
 typedef struct {
     /**
@@ -34,6 +35,7 @@ typedef struct {
     int curr_gear;
     float reverse_ratio;
     float reverse_inertia;
+    float input_angular_velocity;
     VecFloat ratios;
     VecFloat inertias;
 } Gearbox;
@@ -42,4 +44,17 @@ Gearbox gearbox_new(VecFloat ratios, VecFloat inertias, float reverse_ratio, flo
 void gearbox_free(Gearbox* gb);
 float gearbox_ratio(const Gearbox* trans);
 float gearbox_inertia(const Gearbox* trans);
+
+typedef struct {
+    float kinetic_coefficient;
+    float static_coefficient;
+    bool is_locked;
+} Clutch;
+
+Clutch clutch_with_torque(
+    float* max_normal_force, float max_static_torque, float max_kinetic_torque);
+
+void clutch_torque_out(Clutch* clutch, float torque_in, float normal_force,
+    AngularVelocity left_vel, AngularVelocity right_vel, float* torque_left, float* torque_right);
+
 #endif /* POWERTRAIN_H */

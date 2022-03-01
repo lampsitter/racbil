@@ -23,6 +23,7 @@ def to_rpm(rads):
     return rads * 60.0 / (math.pi * 2.0)
 
 axs[0, 0].plot(time, [to_rpm(vel) for vel in data["engine"]["angular_velocity"]], label="Engine velocity(rpm)")
+axs[0, 0].plot(time, [to_rpm(vel) for vel in data["gearbox_input_shaft"]["angular_velocity"]], label="Input shaft velocity(rpm)")
 axs[0, 0].plot(time, [to_rpm(vel) for vel in data["fl_wheel"]["angular_velocity"]], label="Fl Velocity(rpm)")
 axs[0, 0].plot(time, [to_rpm(vel) for vel in data["fr_wheel"]["angular_velocity"]], label="Fr Velocity(rpm)")
 axs[0, 0].plot(time, [to_rpm(vel) for vel in data["rl_wheel"]["angular_velocity"]], label="Rl Velocity(rpm)")
