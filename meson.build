@@ -20,6 +20,8 @@ source = files(
   'src/tiremodel.h',
   'src/wheel.c',
   'src/wheel.h',
+  'src/body.c',
+  'src/body.h',
 )
 
 m_dep = cc.find_library('m')
