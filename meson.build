@@ -13,7 +13,6 @@ cc = meson.get_compiler('c')
 source = files(
   'src/powertrain.h',
   'src/powertrain.c',
-  'src/main.c',
   'src/common.c',
   'src/common.h',
   'src/tiremodel.c',
@@ -26,5 +25,7 @@ source = files(
 
 m_dep = cc.find_library('m')
 
-executable('c_racbil', source, dependencies: m_dep)
+executable('c_racbil', ['src/main.c', source], dependencies: m_dep)
+
+library('c_racbil', ['src/lib.c', source], dependencies: m_dep)
 
