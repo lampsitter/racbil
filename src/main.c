@@ -10,51 +10,6 @@
 typedef Vector3f Cog;
 
 #include <assert.h>
-
-typedef struct {
-    int num_gears;
-    int curr_gear;
-    float reverse_ratio;
-    float reverse_inertia;
-    float* ratios;
-    float* inertias;
-} Transmission;
-
-Transmission transmission_new(
-    float num_gears, float* ratios, float* inertias, float reverse_ratio, float reverse_inertia)
-{
-    return (Transmission) { .num_gears = num_gears,
-        .ratios = ratios,
-        .inertias = inertias,
-        .reverse_ratio = reverse_ratio,
-        .reverse_inertia = reverse_inertia,
-        .curr_gear = 0 };
-}
-
-float transmission_ratio(const Transmission* trans)
-{
-    int curr_gear = trans->curr_gear;
-    if (curr_gear < 0) {
-        return trans->reverse_ratio;
-    } else if (curr_gear == 0) {
-        return 0;
-    } else {
-        return trans->ratios[curr_gear - 1];
-    }
-}
-
-float transmission_inertia(const Transmission* trans)
-{
-    int curr_gear = trans->curr_gear;
-    if (curr_gear < 0) {
-        return trans->reverse_inertia;
-    } else if (curr_gear == 0) {
-        return 0;
-    } else {
-        return trans->inertias[curr_gear - 1];
-    }
-}
-
 // This assumes that the cog is in between each axle
 Cog cog_from_distribution(float ratio_front, float height, float wheelbase)
 {
@@ -130,8 +85,8 @@ int main(void)
     inertias[4] = 0.14;
     inertias[5] = 0.1;
 
-    Transmission trans = transmission_new(num_gears, ratios, inertias, -1.6, 0.95);
-    trans.curr_gear = 1;
+    Gearbox gb = gearbox_new(num_gears, ratios, inertias, -1.6, 0.95);
+    gb.curr_gear = 1;
 
     Differential diff = (Differential) { .ratio = 2.4, .inv_inertia = 1.0 / 0.18 };
 
@@ -180,10 +135,10 @@ int main(void)
         wheel_change_angle(&wfl, steering_angle);
         wheel_change_angle(&wfr, steering_angle);
 
-        float t_ratio = transmission_ratio(&trans);
+        float t_ratio = gearbox_ratio(&gb);
         float eng_torque = engine_torque(&engine, throttle_pos);
         float trans_torque = eng_torque * t_ratio;
-        float inv_inertia = engine.inv_inertia + diff.inv_inertia + transmission_inertia(&trans);
+        float inv_inertia = engine.inv_inertia + diff.inv_inertia + gearbox_inertia(&gb);
 
         float left_torque;
         float right_torque;

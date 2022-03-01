@@ -26,3 +26,38 @@ float differential_velocity(
 {
     return (left_angular_velocity + right_angular_velocity) * 0.5 * diff->ratio;
 }
+
+Gearbox gearbox_new(
+    float num_gears, float* ratios, float* inertias, float reverse_ratio, float reverse_inertia)
+{
+    return (Gearbox) { .num_gears = num_gears,
+        .ratios = ratios,
+        .inertias = inertias,
+        .reverse_ratio = reverse_ratio,
+        .reverse_inertia = reverse_inertia,
+        .curr_gear = 0 };
+}
+
+float gearbox_ratio(const Gearbox* trans)
+{
+    int curr_gear = trans->curr_gear;
+    if (curr_gear < 0) {
+        return trans->reverse_ratio;
+    } else if (curr_gear == 0) {
+        return 0;
+    } else {
+        return trans->ratios[curr_gear - 1];
+    }
+}
+
+float gearbox_inertia(const Gearbox* trans)
+{
+    int curr_gear = trans->curr_gear;
+    if (curr_gear < 0) {
+        return trans->reverse_inertia;
+    } else if (curr_gear == 0) {
+        return 0;
+    } else {
+        return trans->inertias[curr_gear - 1];
+    }
+}
