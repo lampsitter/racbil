@@ -29,6 +29,6 @@ executable('c_racbil', ['src/main.c', source], dependencies: m_dep)
 library('c_racbil', ['src/lib.c', source], dependencies: m_dep)
 
 
-t = executable('test_common', ['src/tests/common.c', source], dependencies: m_dep)
-test('c_racbil', t)
+test('test_common', executable('test_common', ['src/tests/common.c', source], dependencies: m_dep))
+test('test_cog', executable('test_cog', ['src/tests/cog.c', source], dependencies: m_dep))
 

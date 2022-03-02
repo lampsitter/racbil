@@ -3,7 +3,6 @@
 #include "powertrain.h"
 #include "tiremodel.h"
 #include "wheel.h"
-#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,11 +77,6 @@ int main(void)
         .y = cog_distance_to_left(cog, body.rear_track_width) };
     Vector2f rr_pos = (Vector2f) { .x = cog_distance_to_rear(cog, body.wheelbase),
         .y = cog_distance_to_right(cog, body.rear_track_width) };
-
-    assert(fl_pos.x > 0.0 && fl_pos.y > 0.0);
-    assert(fr_pos.x > 0.0 && fr_pos.y < 0.0);
-    assert(rl_pos.x < 0.0 && rl_pos.y > 0.0);
-    assert(rr_pos.x < 0.0 && rr_pos.y < 0.0);
 
     Wheel wfl = wheel_new(1.0 / 0.6, 0.344, -0.2, fl_pos);
     Wheel wfr = wheel_new(1.0 / 0.6, 0.344, 0.2, fr_pos);
