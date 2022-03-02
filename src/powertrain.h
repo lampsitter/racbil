@@ -3,14 +3,22 @@
 #include "common.h"
 
 typedef struct {
+    /**
+     * `x` is the throttle position from 0.0 to 1.0
+     * `y` is the rpm from 0.0 to 1.0
+     * `z` is torque from 0.0 to 1.0
+     * */
+    Table torque_map;
     AngularVelocity angular_velocity;
     float inv_inertia;
-    // TODO: table
-    float torque;
+    float max_rpm;
+    float max_torque;
 } Engine;
 
-Engine engine_new(float inv_inertia);
+Engine engine_new(float inv_inertia, Table torque_map, float max_map_rpm, float max_map_torque);
+void engine_free(Engine* engine);
 float engine_torque(Engine* engine, float throttle_pos);
+void engine_set_angular_velocity(Engine* engine, AngularVelocity velocity);
 
 typedef struct {
     float ratio;

@@ -1,16 +1,32 @@
 #include "powertrain.h"
+#include "common.h"
 #include <stdlib.h>
 
-Engine engine_new(float inv_inertia)
+Engine engine_new(float inv_inertia, Table torque_map, float max_map_rpm, float max_map_torque)
 {
     return (Engine) {
+        .torque_map = torque_map,
         .angular_velocity = 0.0f,
         .inv_inertia = inv_inertia,
-        .torque = 50.0f,
+        .max_rpm = max_map_rpm,
+        .max_torque = max_map_torque,
     };
 }
 
-float engine_torque(Engine* engine, float throttle_pos) { return engine->torque * throttle_pos; }
+void engine_free(Engine* engine) { table_free(&engine->torque_map); }
+
+float engine_torque(Engine* engine, float throttle_pos)
+{
+    float rpm = angular_vel_rads_to_rpm(engine->angular_velocity);
+    float normalized_torque
+        = table_lookup(&engine->torque_map, throttle_pos, rpm / engine->max_rpm);
+    return normalized_torque * engine->max_torque;
+}
+
+void engine_set_angular_velocity(Engine* engine, AngularVelocity velocity)
+{
+    engine->angular_velocity = fmaxf(velocity, 0.0);
+}
 
 void differential_torque(
     Differential* diff, float input_torque, float* output_left_torque, float* output_right_torque)

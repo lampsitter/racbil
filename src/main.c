@@ -24,7 +24,41 @@ int main(void)
     float yaw = 0.0;
 
     Body body = body_new(0.36, 1.9, 3.6f, 1.47f, 1.475f);
-    Engine engine = engine_new(1.0 / 0.5);
+
+    // TODO: Visualize and tweak
+    Table torque_map = table_with_capacity(2, 7);
+    torque_map.x[0] = 0.0;
+    torque_map.x[1] = 1.0;
+
+    torque_map.y[0] = 0.0;
+    torque_map.y[1] = 0.2;
+    // Deliberate discontinuity in the graph
+    torque_map.y[2] = 0.2;
+    torque_map.y[3] = 0.4;
+    torque_map.y[4] = 0.6;
+    torque_map.y[5] = 0.8;
+    torque_map.y[6] = 1.0;
+
+    // throttle 0.0
+    torque_map.z[0][0] = -0.2;
+    torque_map.z[0][1] = -0.25;
+    torque_map.z[0][2] = -0.3;
+    torque_map.z[0][3] = -0.35;
+    torque_map.z[0][4] = -0.4;
+    torque_map.z[0][5] = -0.45;
+    torque_map.z[0][6] = -0.5;
+
+    // throttle 1.0
+    torque_map.z[1][0] = -0.2;
+    torque_map.z[1][1] = 0.3;
+    torque_map.z[1][2] = 0.3;
+    torque_map.z[1][3] = 0.5;
+    torque_map.z[1][4] = 0.8;
+    torque_map.z[1][5] = 1.0;
+    torque_map.z[1][6] = 0.96;
+
+    Engine engine = engine_new(1.0 / 0.5, torque_map, 5000.0, 80.0);
+    engine.angular_velocity = angular_vel_rpm_to_rads(1200.0);
 
     int num_gears = 6;
     VecFloat ratios = vec_with_capacity(num_gears);
@@ -119,14 +153,12 @@ int main(void)
 
         velocity.x += integrate(force.x, inv_vehicle_mass, dt);
         velocity.y += integrate(force.y, inv_vehicle_mass, dt);
-        // To prevent inital flip flop. TODO: remove
-        if (velocity.x < 0.0) {
-            velocity.x = 0.0;
-        }
 
-        engine.angular_velocity
-            = differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity) * t_ratio;
+        engine_set_angular_velocity(&engine,
+            differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity) * t_ratio);
 
+        // TODO: Engine redline
+        printf("Engine velocity: %frpm\n", angular_vel_rads_to_rpm(engine.angular_velocity));
         Vector2f slip_front = wheel_slip(&wfl);
         Vector2f slip_rear = wheel_slip(&wrl);
         printf("Slip F x/y = %.2f/%.2f | Slip R = %.2f/%.2f | ", slip_front.x, slip_front.y,
@@ -137,6 +169,7 @@ int main(void)
         sleep(dt);
     }
 
+    engine_free(&engine);
     gearbox_free(&gb);
 
     return 0;
