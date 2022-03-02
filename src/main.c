@@ -123,7 +123,13 @@ int main(void)
         wheel_change_angle(&wfr, steering_angle);
 
         float t_ratio = gearbox_ratio(&gb);
-        float eng_torque = engine_torque(&engine, throttle_pos);
+
+        float internal_throttle = throttle_pos;
+        if (engine.angular_velocity > angular_vel_rpm_to_rads(4800.0)) {
+            internal_throttle = 0.0;
+        }
+
+        float eng_torque = engine_torque(&engine, internal_throttle);
         float trans_torque = eng_torque * t_ratio;
         float inv_inertia = engine.inv_inertia + diff.inv_inertia + gearbox_inertia(&gb);
 
@@ -158,7 +164,8 @@ int main(void)
             differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity) * t_ratio);
 
         // TODO: Engine redline
-        printf("Engine velocity: %frpm\n", angular_vel_rads_to_rpm(engine.angular_velocity));
+        printf("Engine velocity: %frpm. Torque: %f\n",
+            angular_vel_rads_to_rpm(engine.angular_velocity), eng_torque);
         Vector2f slip_front = wheel_slip(&wfl);
         Vector2f slip_rear = wheel_slip(&wrl);
         printf("Slip F x/y = %.2f/%.2f | Slip R = %.2f/%.2f | ", slip_front.x, slip_front.y,
