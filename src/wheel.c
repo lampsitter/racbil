@@ -1,13 +1,13 @@
 #include "wheel.h"
 
-Wheel wheel_new(float inv_inertia, float radius, float toe, Vector2f position)
+Wheel wheel_new(float inv_inertia, float radius, float toe, Vector2f position, float min_speed)
 {
     return (Wheel) {
         .inv_inertia = inv_inertia,
         .effective_radius = radius,
-        .unloaded_radius = radius,
         .position = position,
-        .hub_velocity = vector2f_default(),
+        .angular_velocity = min_speed / radius,
+        .hub_velocity = (Vector2f) { .x = min_speed, .y = 0.0 },
         .angle = toe,
         .toe = toe,
         .reaction_torque = 0.0f,
@@ -25,19 +25,31 @@ static Vector2f translate_velocity(
     return (Vector2f) { .x = x, .y = y };
 }
 
+
+static void clamp_hub_speed(Wheel* wheel, float min_speed) {
+    if (fabs(wheel->hub_velocity.x) < min_speed) {
+        wheel->hub_velocity.x = signum(wheel->hub_velocity.x) * min_speed;
+    }
+}
+
+static void clamp_angular_velocity(Wheel* wheel, float min_speed) {
+    if (fabs(wheel->angular_velocity * wheel->effective_radius) < min_speed) {
+        wheel->angular_velocity = signum(wheel->angular_velocity) * min_speed / wheel->effective_radius;
+    }
+}
+
 void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocity_cog,
-    float external_inv_inertia, float torque, float dt)
+    float external_inv_inertia, float torque, float dt, float min_speed)
 {
     wheel->hub_velocity
         = translate_velocity(velocity_cog, yaw_angular_velocity_cog, wheel->position);
+    clamp_hub_speed(wheel, min_speed);
 
     float total_torque = torque + wheel->reaction_torque;
     wheel->angular_velocity
         += integrate(total_torque, external_inv_inertia + wheel->inv_inertia, dt);
-    if (wheel->angular_velocity < 0.0) {
-        // TODO: Allow reverse driving
-        wheel->angular_velocity = 0.0f;
-    }
+
+    clamp_angular_velocity(wheel, min_speed);
 }
 
 static float wheel_reaction_torque(const Wheel* wheel, Vector2f force)

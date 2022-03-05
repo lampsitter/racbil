@@ -10,7 +10,7 @@
 
 int main(void)
 {
-    float throttle_pos = 1.0;
+    float throttle_pos = 0.0;
     float steering_angle = 0.0;
 
     float dt = 1.0 / 50.0;
@@ -26,36 +26,40 @@ int main(void)
     Body body = body_new(0.36, 1.9, 3.6f, 1.47f, 1.475f);
 
     // TODO: Visualize and tweak
-    Table torque_map = table_with_capacity(2, 7);
+    Table torque_map = table_with_capacity(2, 2);
     torque_map.x[0] = 0.0;
     torque_map.x[1] = 1.0;
-
-    torque_map.y[0] = 0.0;
-    torque_map.y[1] = 0.2;
-    // Deliberate discontinuity in the graph
-    torque_map.y[2] = 0.2;
-    torque_map.y[3] = 0.4;
-    torque_map.y[4] = 0.6;
-    torque_map.y[5] = 0.8;
-    torque_map.y[6] = 1.0;
-
-    // throttle 0.0
     torque_map.z[0][0] = -0.2;
-    torque_map.z[0][1] = -0.25;
-    torque_map.z[0][2] = -0.3;
-    torque_map.z[0][3] = -0.35;
-    torque_map.z[0][4] = -0.4;
-    torque_map.z[0][5] = -0.45;
-    torque_map.z[0][6] = -0.5;
+    torque_map.z[0][1] = -0.2;
+    torque_map.z[1][0] = 1.0;
+    torque_map.z[1][1] = 1.0;
 
-    // throttle 1.0
-    torque_map.z[1][0] = -0.2;
-    torque_map.z[1][1] = 0.3;
-    torque_map.z[1][2] = 0.3;
-    torque_map.z[1][3] = 0.5;
-    torque_map.z[1][4] = 0.8;
-    torque_map.z[1][5] = 1.0;
-    torque_map.z[1][6] = 0.96;
+    /* torque_map.y[0] = 0.0; */
+    /* torque_map.y[1] = 0.2; */
+    /* // Deliberate discontinuity in the graph */
+    /* torque_map.y[2] = 0.2; */
+    /* torque_map.y[3] = 0.4; */
+    /* torque_map.y[4] = 0.6; */
+    /* torque_map.y[5] = 0.8; */
+    /* torque_map.y[6] = 1.0; */
+
+    /* // throttle 0.0 */
+    /* torque_map.z[0][0] = -0.2; */
+    /* torque_map.z[0][1] = -0.25; */
+    /* torque_map.z[0][2] = -0.3; */
+    /* torque_map.z[0][3] = -0.35; */
+    /* torque_map.z[0][4] = -0.4; */
+    /* torque_map.z[0][5] = -0.45; */
+    /* torque_map.z[0][6] = -0.5; */
+
+    /* // throttle 1.0 */
+    /* torque_map.z[1][0] = -0.2; */
+    /* torque_map.z[1][1] = 0.3; */
+    /* torque_map.z[1][2] = 0.3; */
+    /* torque_map.z[1][3] = 0.5; */
+    /* torque_map.z[1][4] = 0.8; */
+    /* torque_map.z[1][5] = 1.0; */
+    /* torque_map.z[1][6] = 0.96; */
 
     Engine engine = engine_new(1.0 / 0.5, torque_map, 5000.0, 80.0);
     engine.angular_velocity = angular_vel_rpm_to_rads(1200.0);
@@ -112,11 +116,12 @@ int main(void)
     Vector2f rr_pos = (Vector2f) { .x = cog_distance_to_rear(cog, body.wheelbase),
         .y = cog_distance_to_right(cog, body.rear_track_width) };
 
-    Wheel wfl = wheel_new(1.0 / 0.6, 0.344, -0.2, fl_pos);
-    Wheel wfr = wheel_new(1.0 / 0.6, 0.344, 0.2, fr_pos);
+    float min_speed = 0.01;
+    Wheel wfl = wheel_new(1.0 / 0.6, 0.344, 0.0, fl_pos, min_speed);
+    Wheel wfr = wheel_new(1.0 / 0.6, 0.344, 0.0, fr_pos, min_speed);
 
-    Wheel wrl = wheel_new(1.0 / 0.6, 0.344, -0.5, rl_pos);
-    Wheel wrr = wheel_new(1.0 / 0.6, 0.344, 0.5, rr_pos);
+    Wheel wrl = wheel_new(1.0 / 0.6, 0.344, 0.0, rl_pos, min_speed);
+    Wheel wrr = wheel_new(1.0 / 0.6, 0.344, 0.0, rr_pos, min_speed);
 
     while (1) {
         wheel_change_angle(&wfl, steering_angle);
@@ -124,12 +129,13 @@ int main(void)
 
         float t_ratio = gearbox_ratio(&gb);
 
-        float internal_throttle = throttle_pos;
-        if (engine.angular_velocity > angular_vel_rpm_to_rads(4800.0)) {
-            internal_throttle = 0.0;
-        }
+        /* float internal_throttle = throttle_pos; */
+        /* if (engine.angular_velocity > angular_vel_rpm_to_rads(4800.0)) { */
+        /*     internal_throttle = 0.0; */
+        /* } */
+        /* float eng_torque = engine_torque(&engine, internal_throttle); */
 
-        float eng_torque = engine_torque(&engine, internal_throttle);
+        float eng_torque = 0.0;
         float trans_torque = eng_torque * t_ratio;
         float inv_inertia = engine.inv_inertia + diff.inv_inertia + gearbox_inertia(&gb);
 
@@ -137,11 +143,11 @@ int main(void)
         float right_torque;
         differential_torque(&diff, trans_torque, &left_torque, &right_torque);
 
-        wheel_update(&wfl, velocity, yaw, 0.0, 0.0f, dt);
-        wheel_update(&wfr, velocity, yaw, 0.0, 0.0f, dt);
+        wheel_update(&wfl, velocity, yaw, 0.0, 0.0f, dt, min_speed);
+        wheel_update(&wfr, velocity, yaw, 0.0, 0.0f, dt, min_speed);
 
-        wheel_update(&wrl, velocity, yaw, inv_inertia, left_torque, dt);
-        wheel_update(&wrr, velocity, yaw, inv_inertia, right_torque, dt);
+        wheel_update(&wrl, velocity, yaw, inv_inertia, left_torque, dt, min_speed);
+        wheel_update(&wrr, velocity, yaw, inv_inertia, right_torque, dt, min_speed);
 
         float fz = mass * gravity * 0.25;
 

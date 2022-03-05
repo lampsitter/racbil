@@ -10,18 +10,17 @@ typedef struct {
     float angle;
     AngularVelocity angular_velocity;
     float inv_inertia;
-    float unloaded_radius;
     float effective_radius;
     float reaction_torque;
     float toe;
 } Wheel;
 
-Wheel wheel_new(float inv_inertia, float radius, float toe, Vector2f position);
+Wheel wheel_new(float inv_inertia, float radius, float toe, Vector2f position, float min_speed);
 
 void wheel_change_angle(Wheel* wheel, float angle);
 Vector2f wheel_slip(const Wheel* wheel);
 void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocity_cog,
-    float external_inv_inertia, float torque, float dt);
+    float external_inv_inertia, float torque, float dt, float min_speed);
 
 /**
  * wheel_update must be called before this function
