@@ -156,7 +156,6 @@ int main(void)
     Vector2f velocity = vector2f_default();
     Vector2f position = vector2f_default();
     float yaw_velocity = 0.0;
-    float yaw_velocity_rate = 0.0;
 
     Body body = body_new(0.36, 1.9, 3.6f, 1.47f, 1.475f);
 
@@ -167,8 +166,10 @@ int main(void)
     torque_map.y[0] = 0.0;
     torque_map.y[1] = 1.0;
 
-    torque_map.z[0][0] = -0.2;
-    torque_map.z[0][1] = -0.2;
+    /* torque_map.z[0][0] = -0.2; */
+    /* torque_map.z[0][1] = -0.2; */
+    torque_map.z[0][0] = 0.0;
+    torque_map.z[0][1] = 0.0;
     torque_map.z[1][0] = 1.0;
     torque_map.z[1][1] = 1.0;
 
@@ -232,6 +233,8 @@ int main(void)
 
     Wheel wrl = wheel_new(1.0 / 0.6, 0.344, 0.0, rl_pos, min_speed);
     Wheel wrr = wheel_new(1.0 / 0.6, 0.344, 0.0, rr_pos, min_speed);
+
+    engine.angular_velocity = min_speed / wrl.effective_radius;
 
     cJSON* output_json = cJSON_CreateObject();
     cJSON* json_elapsed_time = json_create_arr();
@@ -322,7 +325,7 @@ int main(void)
         engine_set_angular_velocity(&engine,
             differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity) * t_ratio);
 
-        printf("Engine velocity: %frpm. Torque: %f\n",
+        printf("Engine velocity: %.1frpm. Torque: %f\n",
             angular_vel_rads_to_rpm(engine.angular_velocity), eng_torque);
         Vector2f slip_front = wheel_slip(&wfl);
         Vector2f slip_rear = wheel_slip(&wrl);
