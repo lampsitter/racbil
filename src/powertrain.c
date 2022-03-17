@@ -8,7 +8,7 @@ Engine engine_new(float inv_inertia, Table torque_map, float max_map_rpm, float 
         .torque_map = torque_map,
         .angular_velocity = 0.0f,
         .inv_inertia = inv_inertia,
-        .max_rpm = max_map_rpm,
+        .max_angular_velocity = angular_vel_rpm_to_rads(max_map_rpm),
         .max_torque = max_map_torque,
     };
 }
@@ -17,9 +17,8 @@ void engine_free(Engine* engine) { table_free(&engine->torque_map); }
 
 float engine_torque(Engine* engine, float throttle_pos)
 {
-    float rpm = angular_vel_rads_to_rpm(engine->angular_velocity);
-    float normalized_torque
-        = table_lookup(&engine->torque_map, throttle_pos, rpm / engine->max_rpm);
+    float normalized_torque = table_lookup(
+        &engine->torque_map, throttle_pos, engine->angular_velocity / engine->max_angular_velocity);
     return normalized_torque * engine->max_torque;
 }
 

@@ -11,7 +11,7 @@ typedef struct {
     Table torque_map;
     AngularVelocity angular_velocity;
     float inv_inertia;
-    float max_rpm;
+    float max_angular_velocity;
     float max_torque;
 } Engine;
 
