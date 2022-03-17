@@ -28,6 +28,11 @@ axs[0, 0].plot(time, [to_rpm(vel) for vel in data["fr_wheel"]["angular_velocity"
 axs[0, 0].plot(time, [to_rpm(vel) for vel in data["rl_wheel"]["angular_velocity"]], label="Rl Velocity(rpm)")
 axs[0, 0].plot(time, [to_rpm(vel) for vel in data["rr_wheel"]["angular_velocity"]], label="Rr Velocity(rpm)")
 
+axs[0, 0].plot(time, [s * 100 for s in data["fl_wheel"]["slip_ratio"]], label="Fl Slip Ratio(x100)")
+axs[0, 0].plot(time, [s * 100 for s in data["fr_wheel"]["slip_ratio"]], label="Fr Slip Ratio(x100)")
+axs[0, 0].plot(time, [s * 100 for s in data["rl_wheel"]["slip_ratio"]], label="Rl Slip Ratio(x100)")
+axs[0, 0].plot(time, [s * 100 for s in data["rr_wheel"]["slip_ratio"]], label="Rr Slip Ratio(x100)")
+
 axs[1, 0].plot(time, [math.sqrt(x * x + y * y) * 3.6 for (x, y) in itertools.zip_longest(data["velocity_x"], data["velocity_y"])], label="Velocity (km/h)")
 axs[2, 0].plot(time, data["yaw_velocity"], label="Yaw rate")
 

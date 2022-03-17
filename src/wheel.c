@@ -36,20 +36,18 @@ static void set_angular_velocity(
     Wheel* wheel, float new_velocity, Vector2f velocity_cog, float min_speed)
 {
 
-    // Only apply artificial rotation when the vehicle is standing stille
+    // Only apply artificial rotation when the vehicle is standing still
     if (velocity_cog.x < EPSILON) {
         wheel->angular_velocity = new_velocity;
         if (fabs(wheel->angular_velocity * wheel->effective_radius) < min_speed) {
             wheel->angular_velocity
                 = signum(wheel->angular_velocity) * min_speed / wheel->effective_radius;
         }
+    } else if (signum(velocity_cog.x) != signum(new_velocity)) {
+        // lock the wheel
+        wheel->angular_velocity = 0.0;
     } else {
-        if (signum(velocity_cog.x) != signum(new_velocity)) {
-            // lock the wheel
-            wheel->angular_velocity = 0.0;
-        } else {
-            wheel->angular_velocity = new_velocity;
-        }
+        wheel->angular_velocity = new_velocity;
     }
 }
 

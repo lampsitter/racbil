@@ -71,6 +71,8 @@ typedef struct {
     cJSON* angle;
     cJSON* angular_velocity;
     cJSON* reaction_torque;
+    cJSON* slip_ratio;
+    cJSON* slip_angle;
 } JsonWheel;
 
 static JsonWheel json_wheel_new(void)
@@ -80,6 +82,8 @@ static JsonWheel json_wheel_new(void)
     cJSON* angle = json_create_arr();
     cJSON* angular_velocity = json_create_arr();
     cJSON* reaction_torque = json_create_arr();
+    cJSON* slip_ratio = json_create_arr();
+    cJSON* slip_angle = json_create_arr();
 
     cJSON* obj = cJSON_CreateObject();
 
@@ -89,6 +93,9 @@ static JsonWheel json_wheel_new(void)
     cJSON_AddItemToObject(obj, "angular_velocity", angular_velocity);
     cJSON_AddItemToObject(obj, "reaction_torque", reaction_torque);
 
+    cJSON_AddItemToObject(obj, "slip_ratio", slip_ratio);
+    cJSON_AddItemToObject(obj, "slip_angle", slip_angle);
+
     return (JsonWheel) {
         .obj = obj,
         .hub_velocity_x = hub_velocity_x,
@@ -96,6 +103,8 @@ static JsonWheel json_wheel_new(void)
         .angle = angle,
         .angular_velocity = angular_velocity,
         .reaction_torque = reaction_torque,
+        .slip_ratio = slip_ratio,
+        .slip_angle = slip_angle,
     };
 }
 
@@ -106,6 +115,10 @@ static void add_json_wheel(JsonWheel* j, const Wheel* w)
     cJSON_AddItemToArray(j->angle, cJSON_CreateNumber(w->angle));
     cJSON_AddItemToArray(j->angular_velocity, cJSON_CreateNumber(w->angular_velocity));
     cJSON_AddItemToArray(j->reaction_torque, cJSON_CreateNumber(w->reaction_torque));
+
+    Vector2f slip = wheel_slip(w);
+    cJSON_AddItemToArray(j->slip_ratio, cJSON_CreateNumber(slip.x));
+    cJSON_AddItemToArray(j->slip_angle, cJSON_CreateNumber(slip.y));
 }
 
 typedef struct {
