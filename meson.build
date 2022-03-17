@@ -22,9 +22,10 @@ source = files(
   'src/body.h',
 )
 
-m_dep = cc.find_library('m')
+m_dep = cc.find_library('m', required: false)
+json_dep = cc.find_library('cjson')
 
-executable('c_racbil', ['src/main.c', source], dependencies: m_dep)
+executable('c_racbil', ['src/main.c', source], dependencies: [m_dep, json_dep])
 
 library('c_racbil', ['src/lib.c', source], dependencies: m_dep)
 

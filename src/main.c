@@ -3,15 +3,144 @@
 #include "powertrain.h"
 #include "tiremodel.h"
 #include "wheel.h"
+#include <cjson/cJSON.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
+
+static inline cJSON* json_create_arr(void)
+{
+    cJSON* arr = cJSON_CreateArray();
+    if (arr == NULL) exit(EXIT_FAILURE);
+    return arr;
+}
+
+typedef struct {
+    cJSON* obj;
+    cJSON* position_x;
+    cJSON* position_y;
+
+    cJSON* velocity_x;
+    cJSON* velocity_y;
+
+    cJSON* yaw_angle;
+} JsonVehicle;
+
+static JsonVehicle json_vehicle_new(cJSON* obj)
+{
+    cJSON* pos_x = json_create_arr();
+    cJSON* pos_y = json_create_arr();
+    cJSON* vel_x = json_create_arr();
+    cJSON* vel_y = json_create_arr();
+    cJSON* yaw_angle = json_create_arr();
+
+    cJSON_AddItemToObject(obj, "position_x", pos_x);
+    cJSON_AddItemToObject(obj, "position_y", pos_y);
+
+    cJSON_AddItemToObject(obj, "velocity_x", vel_x);
+    cJSON_AddItemToObject(obj, "velocity_y", vel_y);
+
+    cJSON_AddItemToObject(obj, "yaw_angle", yaw_angle);
+
+    return (JsonVehicle) {
+        .position_x = pos_x,
+        .position_y = pos_y,
+        .velocity_x = vel_x,
+        .velocity_y = vel_y,
+        .yaw_angle = yaw_angle,
+    };
+}
+
+static void add_json_vehicle(JsonVehicle* v, Vector2f velocity, Vector2f position, float yaw_angle)
+{
+    cJSON_AddItemToArray(v->position_x, cJSON_CreateNumber(position.x));
+    cJSON_AddItemToArray(v->position_y, cJSON_CreateNumber(position.y));
+
+    cJSON_AddItemToArray(v->velocity_x, cJSON_CreateNumber(velocity.x));
+    cJSON_AddItemToArray(v->velocity_y, cJSON_CreateNumber(velocity.y));
+    cJSON_AddItemToArray(v->yaw_angle, cJSON_CreateNumber(yaw_angle));
+}
+
+typedef struct {
+    cJSON* obj;
+    cJSON* hub_velocity_x;
+    cJSON* hub_velocity_y;
+    cJSON* angle;
+    cJSON* angular_velocity;
+    cJSON* reaction_torque;
+} JsonWheel;
+
+static JsonWheel json_wheel_new(void)
+{
+    cJSON* hub_velocity_x = json_create_arr();
+    cJSON* hub_velocity_y = json_create_arr();
+    cJSON* angle = json_create_arr();
+    cJSON* angular_velocity = json_create_arr();
+    cJSON* reaction_torque = json_create_arr();
+
+    cJSON* obj = cJSON_CreateObject();
+
+    cJSON_AddItemToObject(obj, "hub_velocity_x", hub_velocity_x);
+    cJSON_AddItemToObject(obj, "hub_velocity_y", hub_velocity_y);
+    cJSON_AddItemToObject(obj, "angle", angle);
+    cJSON_AddItemToObject(obj, "angular_velocity", angular_velocity);
+    cJSON_AddItemToObject(obj, "reaction_torque", reaction_torque);
+
+    return (JsonWheel) {
+        .obj = obj,
+        .hub_velocity_x = hub_velocity_x,
+        .hub_velocity_y = hub_velocity_y,
+        .angle = angle,
+        .angular_velocity = angular_velocity,
+        .reaction_torque = reaction_torque,
+    };
+}
+
+static void add_json_wheel(JsonWheel* j, const Wheel* w)
+{
+    cJSON_AddItemToArray(j->hub_velocity_x, cJSON_CreateNumber(w->hub_velocity.x));
+    cJSON_AddItemToArray(j->hub_velocity_y, cJSON_CreateNumber(w->hub_velocity.y));
+    cJSON_AddItemToArray(j->angle, cJSON_CreateNumber(w->angle));
+    cJSON_AddItemToArray(j->angular_velocity, cJSON_CreateNumber(w->angular_velocity));
+    cJSON_AddItemToArray(j->reaction_torque, cJSON_CreateNumber(w->reaction_torque));
+}
+
+typedef struct {
+    cJSON* obj;
+    cJSON* angular_velocity;
+    cJSON* torque;
+} JsonRotating;
+
+static JsonRotating json_rotating_new(void)
+{
+    cJSON* angular_velocity = json_create_arr();
+    cJSON* torque = json_create_arr();
+
+    cJSON* obj = cJSON_CreateObject();
+
+    cJSON_AddItemToObject(obj, "torque", torque);
+    cJSON_AddItemToObject(obj, "angular_velocity", angular_velocity);
+
+    return (JsonRotating) {
+        .obj = obj,
+        .angular_velocity = angular_velocity,
+        .torque = torque,
+    };
+}
+
+static void add_json_rotating(JsonRotating* e, float angular_velocity, float torque)
+{
+    cJSON_AddItemToArray(e->angular_velocity, cJSON_CreateNumber(angular_velocity));
+    cJSON_AddItemToArray(e->torque, cJSON_CreateNumber(torque));
+}
+
 int main(void)
 {
     float throttle_pos = 0.0;
     float steering_angle = 0.0;
+    float elapsed_time = 0.0;
 
     float dt = 1.0 / 50.0;
     float mass = 1580.0f;
@@ -21,6 +150,7 @@ int main(void)
 
     // Uses iso8855 coordinates
     Vector2f velocity = vector2f_default();
+    Vector2f position = vector2f_default();
     float yaw = 0.0;
 
     Body body = body_new(0.36, 1.9, 3.6f, 1.47f, 1.475f);
@@ -33,33 +163,6 @@ int main(void)
     torque_map.z[0][1] = -0.2;
     torque_map.z[1][0] = 1.0;
     torque_map.z[1][1] = 1.0;
-
-    /* torque_map.y[0] = 0.0; */
-    /* torque_map.y[1] = 0.2; */
-    /* // Deliberate discontinuity in the graph */
-    /* torque_map.y[2] = 0.2; */
-    /* torque_map.y[3] = 0.4; */
-    /* torque_map.y[4] = 0.6; */
-    /* torque_map.y[5] = 0.8; */
-    /* torque_map.y[6] = 1.0; */
-
-    /* // throttle 0.0 */
-    /* torque_map.z[0][0] = -0.2; */
-    /* torque_map.z[0][1] = -0.25; */
-    /* torque_map.z[0][2] = -0.3; */
-    /* torque_map.z[0][3] = -0.35; */
-    /* torque_map.z[0][4] = -0.4; */
-    /* torque_map.z[0][5] = -0.45; */
-    /* torque_map.z[0][6] = -0.5; */
-
-    /* // throttle 1.0 */
-    /* torque_map.z[1][0] = -0.2; */
-    /* torque_map.z[1][1] = 0.3; */
-    /* torque_map.z[1][2] = 0.3; */
-    /* torque_map.z[1][3] = 0.5; */
-    /* torque_map.z[1][4] = 0.8; */
-    /* torque_map.z[1][5] = 1.0; */
-    /* torque_map.z[1][6] = 0.96; */
 
     Engine engine = engine_new(1.0 / 0.5, torque_map, 5000.0, 80.0);
     engine.angular_velocity = angular_vel_rpm_to_rads(1200.0);
@@ -123,7 +226,28 @@ int main(void)
     Wheel wrl = wheel_new(1.0 / 0.6, 0.344, 0.0, rl_pos, min_speed);
     Wheel wrr = wheel_new(1.0 / 0.6, 0.344, 0.0, rr_pos, min_speed);
 
-    while (1) {
+    cJSON* output_json = cJSON_CreateObject();
+    cJSON* timesteps = json_create_arr();
+    cJSON_AddItemToObject(output_json, "timesteps", timesteps);
+
+    JsonVehicle json_v = json_vehicle_new(output_json);
+
+    JsonRotating json_engine = json_rotating_new();
+    cJSON_AddItemToObject(output_json, "engine", json_engine.obj);
+
+    JsonWheel json_fl = json_wheel_new();
+    cJSON_AddItemToObject(output_json, "fl_wheel", json_fl.obj);
+
+    JsonWheel json_fr = json_wheel_new();
+    cJSON_AddItemToObject(output_json, "fr_wheel", json_fr.obj);
+
+    JsonWheel json_rl = json_wheel_new();
+    cJSON_AddItemToObject(output_json, "rl_wheel", json_rl.obj);
+
+    JsonWheel json_rr = json_wheel_new();
+    cJSON_AddItemToObject(output_json, "rr_wheel", json_rr.obj);
+
+    while (elapsed_time <= 60.0) {
         wheel_change_angle(&wfl, steering_angle);
         wheel_change_angle(&wfr, steering_angle);
 
@@ -134,8 +258,8 @@ int main(void)
         /*     internal_throttle = 0.0; */
         /* } */
         /* float eng_torque = engine_torque(&engine, internal_throttle); */
-
         float eng_torque = 0.0;
+
         float trans_torque = eng_torque * t_ratio;
         float inv_inertia = engine.inv_inertia + diff.inv_inertia + gearbox_inertia(&gb);
 
@@ -148,6 +272,11 @@ int main(void)
 
         wheel_update(&wrl, velocity, yaw, inv_inertia, left_torque, dt, min_speed);
         wheel_update(&wrr, velocity, yaw, inv_inertia, right_torque, dt, min_speed);
+
+        add_json_wheel(&json_fl, &wfl);
+        add_json_wheel(&json_fr, &wfr);
+        add_json_wheel(&json_rl, &wrl);
+        add_json_wheel(&json_rr, &wrr);
 
         float fz = mass * gravity * 0.25;
 
@@ -166,10 +295,12 @@ int main(void)
         velocity.x += integrate(force.x, inv_vehicle_mass, dt);
         velocity.y += integrate(force.y, inv_vehicle_mass, dt);
 
+        position.x += velocity.x * dt;
+        position.y += velocity.y * dt;
+
         engine_set_angular_velocity(&engine,
             differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity) * t_ratio);
 
-        // TODO: Engine redline
         printf("Engine velocity: %frpm. Torque: %f\n",
             angular_vel_rads_to_rpm(engine.angular_velocity), eng_torque);
         Vector2f slip_front = wheel_slip(&wfl);
@@ -178,12 +309,28 @@ int main(void)
             slip_rear.x, slip_rear.y);
         printf("m/s = %f/%f\n", velocity.x, velocity.y);
 
-        // Just to get a feel for the simulation
-        sleep(dt);
+        add_json_rotating(&json_engine, engine.angular_velocity, eng_torque);
+        add_json_vehicle(&json_v, velocity, position, yaw);
+
+        cJSON_AddItemToArray(timesteps, cJSON_CreateNumber(elapsed_time));
+        elapsed_time += dt;
     }
 
     engine_free(&engine);
     gearbox_free(&gb);
+
+    FILE* fs = fopen("../output.json", "w");
+    if (fs == NULL) exit(EXIT_FAILURE);
+
+    char* json_str = cJSON_Print(output_json);
+    if (json_str == NULL) exit(EXIT_FAILURE);
+
+    fprintf(fs, json_str);
+
+    free(json_str);
+    fclose(fs);
+
+    cJSON_Delete(output_json);
 
     return 0;
 }
