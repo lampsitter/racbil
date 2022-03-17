@@ -32,13 +32,23 @@ static void clamp_hub_speed(Wheel* wheel, float min_speed)
     }
 }
 
-static void clamp_angular_velocity(Wheel* wheel, Vector2f velocity_cog, float min_speed)
+static void set_angular_velocity(
+    Wheel* wheel, float new_velocity, Vector2f velocity_cog, float min_speed)
 {
+
     // Only apply artificial rotation when the vehicle is standing stille
     if (velocity_cog.x < EPSILON) {
+        wheel->angular_velocity = new_velocity;
         if (fabs(wheel->angular_velocity * wheel->effective_radius) < min_speed) {
             wheel->angular_velocity
                 = signum(wheel->angular_velocity) * min_speed / wheel->effective_radius;
+        }
+    } else {
+        if (signum(velocity_cog.x) != signum(new_velocity)) {
+            // lock the wheel
+            wheel->angular_velocity = 0.0;
+        } else {
+            wheel->angular_velocity = new_velocity;
         }
     }
 }
@@ -51,10 +61,10 @@ void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocit
     clamp_hub_speed(wheel, min_speed);
 
     float total_torque = torque + wheel->reaction_torque;
-    wheel->angular_velocity
-        += integrate(total_torque, external_inv_inertia + wheel->inv_inertia, dt);
+    float new_velocity = wheel->angular_velocity
+        + integrate(total_torque, external_inv_inertia + wheel->inv_inertia, dt);
 
-    clamp_angular_velocity(wheel, velocity_cog, min_speed);
+    set_angular_velocity(wheel, new_velocity, velocity_cog, min_speed);
 }
 
 static float wheel_reaction_torque(const Wheel* wheel, Vector2f force)

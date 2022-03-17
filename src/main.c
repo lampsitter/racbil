@@ -166,10 +166,10 @@ int main(void)
     torque_map.y[0] = 0.0;
     torque_map.y[1] = 1.0;
 
-    /* torque_map.z[0][0] = -0.2; */
-    /* torque_map.z[0][1] = -0.2; */
-    torque_map.z[0][0] = 0.0;
-    torque_map.z[0][1] = 0.0;
+    torque_map.z[0][0] = -0.2;
+    torque_map.z[0][1] = -0.2;
+    /* torque_map.z[0][0] = 0.0; */
+    /* torque_map.z[0][1] = 0.0; */
     torque_map.z[1][0] = 1.0;
     torque_map.z[1][1] = 1.0;
 
