@@ -5,8 +5,10 @@
 #include "wheel.h"
 #include <cjson/cJSON.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 static inline cJSON* json_create_arr(void)
@@ -150,8 +152,17 @@ static void add_json_rotating(JsonRotating* e, float angular_velocity, float tor
     cJSON_AddItemToArray(e->torque, cJSON_CreateNumber(torque));
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
+    bool should_write = false;
+
+    if (argc == 2 && strcmp(argv[1], "--write") == 0) {
+        should_write = true;
+    } else if (argc >= 2) {
+        fprintf(stderr, "Unknown argument(s)\n");
+        exit(EXIT_FAILURE);
+    }
+
     float throttle_pos = 1.0;
     float brake_pos = 0.0;
     float clutch_pos = 0.0;
@@ -383,18 +394,21 @@ int main(void)
     engine_free(&engine);
     gearbox_free(&gb);
 
-    FILE* fs = fopen("../output.json", "w");
-    if (fs == NULL)
-        exit(EXIT_FAILURE);
+    if (should_write) {
+        FILE* fs = fopen("../output.json", "w");
+        if (fs == NULL)
+            exit(EXIT_FAILURE);
 
-    char* json_str = cJSON_Print(output_json);
-    if (json_str == NULL)
-        exit(EXIT_FAILURE);
+        char* json_str = cJSON_Print(output_json);
+        if (json_str == NULL)
+            exit(EXIT_FAILURE);
 
-    fprintf(fs, "%s", json_str);
+        fprintf(fs, "%s", json_str);
 
-    free(json_str);
-    fclose(fs);
+        free(json_str);
+        fclose(fs);
+        puts("Wrote to file output.json");
+    }
 
     cJSON_Delete(output_json);
 
