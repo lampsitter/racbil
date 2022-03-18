@@ -369,7 +369,7 @@ int main(void)
     if (json_str == NULL)
         exit(EXIT_FAILURE);
 
-    fprintf(fs, json_str);
+    fprintf(fs, "%s", json_str);
 
     free(json_str);
     fclose(fs);
