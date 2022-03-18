@@ -1,4 +1,5 @@
 #include "wheel.h"
+#include "common.h"
 
 Wheel wheel_new(float inv_inertia, float radius, Vector2f position, float min_speed)
 {
@@ -24,17 +25,24 @@ static Vector2f translate_velocity(
     return (Vector2f) { .x = x, .y = y };
 }
 
-static void clamp_hub_speed(Wheel* wheel, float min_speed)
+static void set_hub_speed(Wheel* wheel, Vector2f new_velocity, float min_speed)
 {
-    if (fabs(wheel->hub_velocity.x) < min_speed) {
+    if (signum(new_velocity.x) != signum(wheel->hub_velocity.x)) {
+        // This prevents driving in reverse, so the hub velocity must be flipped
+        // manually when the car is set into reverse
         wheel->hub_velocity.x = signum(wheel->hub_velocity.x) * min_speed;
+    } else if (fabs(wheel->hub_velocity.x) < min_speed) {
+        wheel->hub_velocity.x = signum(wheel->hub_velocity.x) * min_speed;
+    } else {
+        wheel->hub_velocity.x = new_velocity.x;
     }
+
+    wheel->hub_velocity.y = new_velocity.y;
 }
 
 static void set_angular_velocity(
     Wheel* wheel, float new_velocity, Vector2f velocity_cog, float min_speed)
 {
-
     // Only apply artificial rotation when the vehicle is standing still
     if (velocity_cog.x < EPSILON) {
         wheel->angular_velocity = new_velocity;
@@ -53,9 +61,9 @@ static void set_angular_velocity(
 void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocity_cog,
     float external_inv_inertia, float torque, float dt, float min_speed)
 {
-    wheel->hub_velocity
+    Vector2f hub_velocity
         = translate_velocity(velocity_cog, yaw_angular_velocity_cog, wheel->position);
-    clamp_hub_speed(wheel, min_speed);
+    set_hub_speed(wheel, hub_velocity, min_speed);
 
     float total_torque = torque + wheel->reaction_torque;
     float new_velocity = wheel->angular_velocity
