@@ -1,6 +1,7 @@
 #ifndef RA_BODY_H
 #define RA_BODY_H
 #include "common.h"
+#include "wheel.h"
 
 typedef Vector3f Cog;
 
@@ -17,10 +18,13 @@ typedef struct {
     float wheelbase;
     float front_track_width, rear_track_width;
     float half_cd_a;
+    float inv_i_zz;
 } Body;
 
-Body body_new(float c_drag, float frontal_area, float wheelbase, float front_track_width,
-    float rear_track_width);
+Body body_new(float inv_i_zz, float c_drag, float frontal_area, float wheelbase,
+    float front_track_width, float rear_track_width);
 
 float body_air_resistance(const Body* body, float air_density, float longitudinal_velocity);
+float yaw_torque(Wheel* fl, Wheel* fr, Wheel* rl, Wheel* rr, Vector2f ffl, Vector2f ffr,
+    Vector2f frl, Vector2f frr);
 #endif /* RA_BODY_H */

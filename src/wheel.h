@@ -12,10 +12,9 @@ typedef struct {
     float inv_inertia;
     float effective_radius;
     float reaction_torque;
-    float toe;
 } Wheel;
 
-Wheel wheel_new(float inv_inertia, float radius, float toe, Vector2f position, float min_speed);
+Wheel wheel_new(float inv_inertia, float radius, Vector2f position, float min_speed);
 
 void wheel_change_angle(Wheel* wheel, float angle);
 Vector2f wheel_slip(const Wheel* wheel);

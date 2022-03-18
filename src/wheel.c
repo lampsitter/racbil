@@ -1,6 +1,6 @@
 #include "wheel.h"
 
-Wheel wheel_new(float inv_inertia, float radius, float toe, Vector2f position, float min_speed)
+Wheel wheel_new(float inv_inertia, float radius, Vector2f position, float min_speed)
 {
     return (Wheel) {
         .inv_inertia = inv_inertia,
@@ -8,13 +8,12 @@ Wheel wheel_new(float inv_inertia, float radius, float toe, Vector2f position, f
         .position = position,
         .angular_velocity = min_speed / radius,
         .hub_velocity = (Vector2f) { .x = min_speed, .y = 0.0 },
-        .angle = toe,
-        .toe = toe,
+        .angle = 0.0,
         .reaction_torque = 0.0f,
     };
 }
 
-void wheel_change_angle(Wheel* wheel, float angle) { wheel->angle = wheel->toe + angle; }
+void wheel_change_angle(Wheel* wheel, float angle) { wheel->angle = angle; }
 
 static Vector2f translate_velocity(
     Vector2f velocity_cog, float yaw_angular_velocity_cog, Vector2f position)
@@ -80,7 +79,6 @@ Vector2f wheel_slip(const Wheel* wheel)
 
 Vector2f wheel_force(Wheel* wheel, TireModel* model, float normal_force, float friction_coefficent)
 {
-
     Vector2f slip = wheel_slip(wheel);
     Vector2f force = tiremodel_force(model, normal_force, slip.x, slip.y, friction_coefficent);
     wheel->reaction_torque = wheel_reaction_torque(wheel, force);

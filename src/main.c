@@ -169,8 +169,9 @@ int main(void)
     Vector2f velocity = vector2f_default();
     Vector2f position = vector2f_default();
     float yaw_velocity = 0.0;
+    float rotation = 0.0;
 
-    Body body = body_new(0.36, 1.9, 3.6f, 1.47f, 1.475f);
+    Body body = body_new(2600.0, 0.36, 1.9, 3.6f, 1.47f, 1.475f);
 
     Table torque_map = table_with_capacity(2, 2);
     torque_map.x[0] = 0.0;
@@ -241,11 +242,11 @@ int main(void)
         .y = cog_distance_to_right(cog, body.rear_track_width) };
 
     float min_speed = 0.01;
-    Wheel wfl = wheel_new(1.0 / 0.6, 0.344, 0.0, fl_pos, min_speed);
-    Wheel wfr = wheel_new(1.0 / 0.6, 0.344, 0.0, fr_pos, min_speed);
+    Wheel wfl = wheel_new(1.0 / 0.6, 0.344, fl_pos, min_speed);
+    Wheel wfr = wheel_new(1.0 / 0.6, 0.344, fr_pos, min_speed);
 
-    Wheel wrl = wheel_new(1.0 / 0.6, 0.344, 0.0, rl_pos, min_speed);
-    Wheel wrr = wheel_new(1.0 / 0.6, 0.344, 0.0, rr_pos, min_speed);
+    Wheel wrl = wheel_new(1.0 / 0.6, 0.344, rl_pos, min_speed);
+    Wheel wrr = wheel_new(1.0 / 0.6, 0.344, rr_pos, min_speed);
 
     engine.angular_velocity = min_speed / wrl.effective_radius;
 
@@ -286,6 +287,7 @@ int main(void)
     cJSON_AddItemToObject(output_json, "rr_wheel", json_rr.obj);
 
     while (elapsed_time <= 60.0) {
+        printf("--------------------------------\n");
         wheel_change_angle(&wfl, steering_angle);
         wheel_change_angle(&wfr, steering_angle);
 
@@ -332,18 +334,27 @@ int main(void)
         velocity.x += integrate(force.x, inv_vehicle_mass, dt);
         velocity.y += integrate(force.y, inv_vehicle_mass, dt);
 
-        position.x += velocity.x * dt;
-        position.y += velocity.y * dt;
+        Vector2f vel_world = vector2f_rotate(velocity, rotation);
+        position.x += vel_world.x * dt;
+        position.y += vel_world.y * dt;
 
         engine_set_angular_velocity(&engine,
             differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity) * t_ratio);
 
+        float zz_torque = yaw_torque(&wfl, &wfr, &wrl, &wrr, wfl_f, wfr_f, wrl_f, wrr_f);
+        yaw_velocity += zz_torque * body.inv_i_zz * dt;
+        rotation += yaw_velocity * dt;
+
         printf("Engine velocity: %.1frpm. Torque: %f\n",
             angular_vel_rads_to_rpm(engine.angular_velocity), eng_torque);
-        Vector2f slip_front = wheel_slip(&wfl);
-        Vector2f slip_rear = wheel_slip(&wrl);
-        printf("Slip F x/y = %.2f/%.2f | Slip R = %.2f/%.2f | ", slip_front.x, slip_front.y,
-            slip_rear.x, slip_rear.y);
+        Vector2f sfl = wheel_slip(&wfl);
+        Vector2f sfr = wheel_slip(&wfr);
+        Vector2f srl = wheel_slip(&wrl);
+        Vector2f srr = wheel_slip(&wrr);
+        printf("Slip Fl x/y = %.2f/%.2f | Slip Fr = %.2f/%.2f\n", sfl.x, sfl.y,
+            sfr.x, sfr.y);
+        printf("Slip Rr x/y = %.2f/%.2f | Slip Rr = %.2f/%.2f\n", srl.x, srl.y,
+            srr.x, srr.y);
         printf("m/s = %f/%f\n", velocity.x, velocity.y);
 
         add_json_rotating(&json_engine, engine.angular_velocity, eng_torque);
