@@ -342,8 +342,13 @@ int main(int argc, char** argv)
 
         printf("Force: %f/%f\n", force.x, force.y);
 
+        Vector2f old_velocity = velocity;
         velocity.x += integrate(force.x, inv_vehicle_mass, dt);
         velocity.y += integrate(force.y, inv_vehicle_mass, dt);
+
+        if (signum(old_velocity.x) != signum(velocity.x)) {
+            velocity.x = 0.0;
+        }
 
         Vector2f vel_world = vector2f_rotate(velocity, rotation);
         position.x += vel_world.x * dt;
