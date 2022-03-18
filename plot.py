@@ -34,6 +34,8 @@ axs[0, 0].plot(time, [s * 100 for s in data["rl_wheel"]["slip_ratio"]], label="R
 axs[0, 0].plot(time, [s * 100 for s in data["rr_wheel"]["slip_ratio"]], label="Rr Slip Ratio(x100)")
 
 axs[1, 0].plot(time, [math.sqrt(x * x + y * y) * 3.6 for (x, y) in itertools.zip_longest(data["velocity_x"], data["velocity_y"])], label="Velocity (km/h)")
+axs[1, 0].plot(time, [x * 3.6 for x in data["velocity_x"]], label="Velocity x (km/h)")
+axs[1, 0].plot(time, [y * 3.6 for y in data["velocity_y"]], label="Velocity y (km/h)")
 axs[2, 0].plot(time, data["yaw_velocity"], label="Yaw rate")
 
 axs[3, 0].plot(time, data["gear"], color="yellow", label="Gear")
