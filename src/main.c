@@ -351,11 +351,22 @@ int main(void)
         Vector2f sfr = wheel_slip(&wfr);
         Vector2f srl = wheel_slip(&wrl);
         Vector2f srr = wheel_slip(&wrr);
-        printf("Slip Fl x/y = %.2f/%.2f | Slip Fr = %.2f/%.2f\n", sfl.x, sfl.y,
-            sfr.x, sfr.y);
-        printf("Slip Rr x/y = %.2f/%.2f | Slip Rr = %.2f/%.2f\n", srl.x, srl.y,
-            srr.x, srr.y);
-        printf("m/s = %f/%f\n", velocity.x, velocity.y);
+
+        puts("Wheels:");
+        printf("\tAngular Vel Fl = %f | Angular Vel Fr = %f\n", wfl.angular_velocity,
+            wfr.angular_velocity);
+        printf("\tAngular Vel Rl = %f | Angular Vel Rr = %f\n", wrl.angular_velocity,
+            wrr.angular_velocity);
+
+        printf("\tHub Vel Fl x/y = %f/%f | Hub Vel Fr = %f/%f\n", wfl.hub_velocity.x,
+            wfl.hub_velocity.y, wfr.hub_velocity.x, wfr.hub_velocity.y);
+        printf("\tHub Vel Rl x/y = %f/%f | Hub Vel Rr = %f/%f\n", wrl.hub_velocity.x,
+            wrl.hub_velocity.y, wrr.hub_velocity.x, wrr.hub_velocity.y);
+
+        printf("\tSlip Fl x/y = %f/%f | Slip Fr = %f/%f\n", sfl.x, sfl.y, sfr.x, sfr.y);
+        printf("\tSlip Rr x/y = %f/%f | Slip Rr = %f/%f\n", srl.x, srl.y, srr.x, srr.y);
+        printf("Velocity(m/s) = %f/%f | Yaw velocity = %f\n", velocity.x, velocity.y, yaw_velocity);
+        puts("");
 
         add_json_rotating(&json_engine, engine.angular_velocity, eng_torque);
         add_json_vehicle(&json_v, velocity, position, yaw_velocity);
