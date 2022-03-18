@@ -182,7 +182,7 @@ int main(int argc, char** argv)
     float yaw_velocity = 0.0;
     float rotation = 0.0;
 
-    Body body = body_new(2600.0, 0.36, 1.9, 3.6f, 1.47f, 1.475f);
+    Body body = body_new(1.0 / 2600.0, 0.36, 1.9, 3.6f, 1.47f, 1.475f);
 
     Table torque_map = table_with_capacity(2, 2);
     torque_map.x[0] = 0.0;
@@ -330,10 +330,15 @@ int main(int argc, char** argv)
 
         float fz = mass * gravity * 0.25;
 
-        Vector2f wfl_f = vector2f_rotate(wheel_force(&wfl, &model, fz, 1.0), -wfl.angle);
-        Vector2f wfr_f = vector2f_rotate(wheel_force(&wfr, &model, fz, 1.0), -wfr.angle);
-        Vector2f wrl_f = vector2f_rotate(wheel_force(&wrl, &model, fz, 1.0), -wrl.angle);
-        Vector2f wrr_f = vector2f_rotate(wheel_force(&wrr, &model, fz, 1.0), -wrr.angle);
+        Vector2f fl_f =wheel_force(&wfl, &model, fz, 1.0);
+        Vector2f fr_f =wheel_force(&wfr, &model, fz, 1.0);
+        Vector2f rl_f =wheel_force(&wrl, &model, fz, 1.0);
+        Vector2f rr_f =wheel_force(&wrr, &model, fz, 1.0);
+
+        Vector2f wfl_f = vector2f_rotate(fl_f, -wfl.angle);
+        Vector2f wfr_f = vector2f_rotate(fr_f, -wfr.angle);
+        Vector2f wrl_f = vector2f_rotate(rl_f, -wrl.angle);
+        Vector2f wrr_f = vector2f_rotate(rr_f, -wrr.angle);
 
         float resitance_force_x = body_air_resistance(&body, air_density, velocity.x);
         Vector2f force
@@ -380,7 +385,9 @@ int main(int argc, char** argv)
             wrl.hub_velocity.y, wrr.hub_velocity.x, wrr.hub_velocity.y);
 
         printf("\tSlip Fl x/y = %f/%f | Slip Fr = %f/%f\n", sfl.x, sfl.y, sfr.x, sfr.y);
-        printf("\tSlip Rr x/y = %f/%f | Slip Rr = %f/%f\n", srl.x, srl.y, srr.x, srr.y);
+        printf("\tSlip Rl x/y = %f/%f | Slip Rr = %f/%f\n", srl.x, srl.y, srr.x, srr.y);
+        printf("\tForce Fl x/y = %f/%f | Force Fr = %f/%f\n", fl_f.x, fl_f.y, fr_f.x, fr_f.y);
+        printf("\tForce Rl x/y = %f/%f | Force Rr = %f/%f\n", rl_f.x, rl_f.y, rr_f.x, rr_f.y);
         printf("Velocity(m/s) = %f/%f | Yaw velocity = %f\n", velocity.x, velocity.y, yaw_velocity);
         puts("");
 
