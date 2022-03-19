@@ -330,10 +330,10 @@ int main(int argc, char** argv)
 
         float fz = mass * gravity * 0.25;
 
-        Vector2f fl_f =wheel_force(&wfl, &model, fz, 1.0);
-        Vector2f fr_f =wheel_force(&wfr, &model, fz, 1.0);
-        Vector2f rl_f =wheel_force(&wrl, &model, fz, 1.0);
-        Vector2f rr_f =wheel_force(&wrr, &model, fz, 1.0);
+        Vector2f fl_f = wheel_force(&wfl, &model, fz, 1.0);
+        Vector2f fr_f = wheel_force(&wfr, &model, fz, 1.0);
+        Vector2f rl_f = wheel_force(&wrl, &model, fz, 1.0);
+        Vector2f rr_f = wheel_force(&wrr, &model, fz, 1.0);
 
         Vector2f wfl_f = vector2f_rotate(fl_f, -wfl.angle);
         Vector2f wfr_f = vector2f_rotate(fr_f, -wfr.angle);
@@ -348,8 +348,8 @@ int main(int argc, char** argv)
         printf("Force: %f/%f\n", force.x, force.y);
 
         Vector2f old_velocity = velocity;
-        velocity.x += integrate(force.x, inv_vehicle_mass, dt);
-        velocity.y += integrate(force.y, inv_vehicle_mass, dt);
+        velocity.x += integrate(force.x * inv_vehicle_mass, dt);
+        velocity.y += integrate(force.y * inv_vehicle_mass, dt);
 
         if (signum(old_velocity.x) != signum(velocity.x)) {
             velocity.x = 0.0;

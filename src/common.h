@@ -28,7 +28,7 @@ typedef struct {
 Vector3f vector3f_default(void);
 float vector3f_length(Vector3f v);
 
-float integrate(float torque, float inv_inertia, float dt);
+float integrate(float dv, float dt);
 
 float rad_to_deg(float radians);
 float deg_to_rad(float degrees);

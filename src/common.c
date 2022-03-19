@@ -26,7 +26,7 @@ Vector3f vector3f_default(void) { return (Vector3f) { .x = 0.0f, .y = 0.0f, .z =
 
 float vector3f_length(Vector3f v) { return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z); }
 
-float integrate(float torque, float inv_inertia, float dt) { return torque * inv_inertia * dt; }
+float integrate(float dv, float dt) { return dv * dt; }
 
 float rad_to_deg(float radians) { return radians * (180.0 / M_PI); }
 
