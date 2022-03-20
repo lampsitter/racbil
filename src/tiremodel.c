@@ -8,13 +8,7 @@ static inline float thread_velocity(float angular_velocity, float effective_radi
 
 float slip_angle(Vector2f velocity, float angle)
 {
-    float slip = atan(velocity.y / velocity.x) - angle;
-
-    if (isnan(slip) || isinf(slip)) {
-        return 0.0f;
-    } else {
-        return slip;
-    }
+    return atan(velocity.y / velocity.x) - angle;
 }
 
 float slip_ratio(Vector2f velocity, float angular_velocity, float effective_radius)
@@ -22,13 +16,7 @@ float slip_ratio(Vector2f velocity, float angular_velocity, float effective_radi
     float thread_vel = thread_velocity(angular_velocity, effective_radius);
     float slip_velocity = -(velocity.x - thread_vel);
 
-    float slip = slip_velocity / (fmaxf(fabsf(velocity.x), fabsf(thread_vel)));
-
-    if (isnan(slip) || isinf(slip)) {
-        return 0.0f;
-    } else {
-        return slip;
-    }
+    return slip_velocity / (fmaxf(fabsf(velocity.x), fabsf(thread_vel)));
 }
 
 static float pacejka(float b, float c, float d, float e, float vh, float vv, float slip)

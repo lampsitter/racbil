@@ -31,7 +31,7 @@ static void set_hub_speed(Wheel* wheel, Vector2f new_velocity, float min_speed)
         // This prevents driving in reverse, so the hub velocity must be flipped
         // manually when the car is set into reverse
         wheel->hub_velocity.x = signum(wheel->hub_velocity.x) * min_speed;
-    } else if (fabs(wheel->hub_velocity.x) < min_speed) {
+    } else if (fabs(new_velocity.x) < min_speed) {
         wheel->hub_velocity.x = signum(wheel->hub_velocity.x) * min_speed;
     } else {
         wheel->hub_velocity.x = new_velocity.x;
