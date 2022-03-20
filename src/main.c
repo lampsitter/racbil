@@ -211,14 +211,14 @@ int main(int argc, char** argv)
     vec_push_float(&ratios, 1.0);
 
     VecFloat inertias = vec_with_capacity(num_gears);
-    vec_push_float(&inertias, 0.2);
-    vec_push_float(&inertias, 0.18);
-    vec_push_float(&inertias, 0.16);
-    vec_push_float(&inertias, 0.15);
-    vec_push_float(&inertias, 0.14);
-    vec_push_float(&inertias, 0.1);
+    vec_push_float(&inertias, 1.0 / 0.2);
+    vec_push_float(&inertias, 1.0 / 0.18);
+    vec_push_float(&inertias, 1.0 / 0.16);
+    vec_push_float(&inertias, 1.0 / 0.15);
+    vec_push_float(&inertias, 1.0 / 0.14);
+    vec_push_float(&inertias, 1.0 / 0.1);
 
-    Gearbox gb = gearbox_new(ratios, inertias, -1.6, 0.95);
+    Gearbox gb = gearbox_new(ratios, inertias, -1.6, 1.0 / 0.95);
     gb.curr_gear = 1;
 
     Differential diff = (Differential) { .ratio = 2.4, .inv_inertia = 1.0 / 0.18 };
