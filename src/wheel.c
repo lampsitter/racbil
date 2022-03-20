@@ -1,10 +1,10 @@
 #include "wheel.h"
 #include "common.h"
 
-Wheel wheel_new(float inv_inertia, float radius, Vector2f position, float min_speed)
+Wheel wheel_new(float inertia, float radius, Vector2f position, float min_speed)
 {
     return (Wheel) {
-        .inv_inertia = inv_inertia,
+        .inertia = inertia,
         .effective_radius = radius,
         .position = position,
         .min_speed = min_speed,
@@ -59,14 +59,14 @@ static void set_angular_velocity(Wheel* wheel, float new_velocity, Vector2f velo
 }
 
 void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocity_cog,
-    float external_inv_inertia, float torque, float dt)
+    float external_inertia, float torque, float dt)
 {
     Vector2f hub_velocity
         = translate_velocity(velocity_cog, yaw_angular_velocity_cog, wheel->position);
     set_hub_speed(wheel, hub_velocity);
 
     float total_torque = torque + wheel->reaction_torque;
-    float dv = total_torque * (external_inv_inertia + wheel->inv_inertia);
+    float dv = total_torque / (external_inertia + wheel->inertia);
     float new_velocity = wheel->angular_velocity + integrate(dv, dt);
 
     set_angular_velocity(wheel, new_velocity, velocity_cog);

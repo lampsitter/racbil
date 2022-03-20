@@ -18,10 +18,10 @@ typedef struct {
     float wheelbase;
     float front_track_width, rear_track_width;
     float half_cd_a;
-    float inv_i_zz;
+    float i_zz;
 } Body;
 
-Body body_new(float inv_i_zz, float c_drag, float frontal_area, float wheelbase,
+Body body_new(float i_zz, float c_drag, float frontal_area, float wheelbase,
     float front_track_width, float rear_track_width);
 
 float body_air_resistance(const Body* body, float air_density, float longitudinal_velocity);

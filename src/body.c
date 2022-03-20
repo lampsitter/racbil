@@ -16,10 +16,10 @@ float cog_distance_to_left(Cog cog, float track_width) { return track_width * 0.
 
 float cog_distance_to_right(Cog cog, float track_width) { return cog.y - track_width * 0.5; }
 
-Body body_new(float inv_i_zz, float c_drag, float frontal_area, float wheelbase,
+Body body_new(float i_zz, float c_drag, float frontal_area, float wheelbase,
     float front_track_width, float rear_track_width)
 {
-    return (Body) { .inv_i_zz = inv_i_zz,
+    return (Body) { .i_zz = i_zz,
         .c_drag = c_drag,
         .frontal_area = frontal_area,
         .half_cd_a = 0.5 * c_drag * frontal_area,

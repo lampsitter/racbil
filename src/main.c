@@ -172,7 +172,6 @@ int main(int argc, char** argv)
 
     float dt = 1.0 / 50.0;
     float mass = 1580.0f;
-    float inv_vehicle_mass = 1.0 / mass;
     float gravity = 9.806f;
     float air_density = 1.2041f;
 
@@ -182,7 +181,7 @@ int main(int argc, char** argv)
     float yaw_velocity = 0.0;
     float rotation = 0.0;
 
-    Body body = body_new(1.0 / 2600.0, 0.36, 1.9, 3.6f, 1.47f, 1.475f);
+    Body body = body_new(2600.0, 0.36, 1.9, 3.6f, 1.47f, 1.475f);
 
     Table torque_map = table_with_capacity(2, 2);
     torque_map.x[0] = 0.0;
@@ -199,7 +198,7 @@ int main(int argc, char** argv)
     torque_map.z[1][0] = 1.0;
     torque_map.z[1][1] = 1.0;
 
-    Engine engine = engine_new(1.0 / 0.5, torque_map, 5000.0, 80.0);
+    Engine engine = engine_new(0.5, torque_map, 5000.0, 80.0);
 
     int num_gears = 6;
     VecFloat ratios = vec_with_capacity(num_gears);
@@ -211,17 +210,17 @@ int main(int argc, char** argv)
     vec_push_float(&ratios, 1.0);
 
     VecFloat inertias = vec_with_capacity(num_gears);
-    vec_push_float(&inertias, 1.0 / 0.2);
-    vec_push_float(&inertias, 1.0 / 0.18);
-    vec_push_float(&inertias, 1.0 / 0.16);
-    vec_push_float(&inertias, 1.0 / 0.15);
-    vec_push_float(&inertias, 1.0 / 0.14);
-    vec_push_float(&inertias, 1.0 / 0.1);
+    vec_push_float(&inertias, 0.2);
+    vec_push_float(&inertias, 0.18);
+    vec_push_float(&inertias, 0.16);
+    vec_push_float(&inertias, 0.15);
+    vec_push_float(&inertias, 0.14);
+    vec_push_float(&inertias, 0.1);
 
-    Gearbox gb = gearbox_new(ratios, inertias, -1.6, 1.0 / 0.95);
+    Gearbox gb = gearbox_new(ratios, inertias, -1.6, 0.95);
     gb.curr_gear = 1;
 
-    Differential diff = (Differential) { .ratio = 2.4, .inv_inertia = 1.0 / 0.18 };
+    Differential diff = (Differential) { .ratio = 2.4, .inertia = 0.18 };
 
     Cog cog = cog_from_distribution(0.55, 0.4, body.wheelbase);
 
@@ -254,13 +253,15 @@ int main(int argc, char** argv)
         .y = cog_distance_to_right(cog, body.rear_track_width) };
 
     float min_speed = 0.01;
-    Wheel wfl = wheel_new(1.0 / 0.6, 0.344, fl_pos, min_speed);
-    Wheel wfr = wheel_new(1.0 / 0.6, 0.344, fr_pos, min_speed);
+    Wheel wfl = wheel_new(0.6, 0.344, fl_pos, min_speed);
+    Wheel wfr = wheel_new(0.6, 0.344, fr_pos, min_speed);
 
-    Wheel wrl = wheel_new(1.0 / 0.6, 0.344, rl_pos, min_speed);
-    Wheel wrr = wheel_new(1.0 / 0.6, 0.344, rr_pos, min_speed);
+    Wheel wrl = wheel_new(0.6, 0.344, rl_pos, min_speed);
+    Wheel wrr = wheel_new(0.6, 0.344, rr_pos, min_speed);
 
-    engine.angular_velocity = differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity) * gearbox_ratio(&gb);
+    engine.angular_velocity
+        = differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity)
+        * gearbox_ratio(&gb);
 
     cJSON* output_json = cJSON_CreateObject();
     cJSON* json_elapsed_time = json_create_arr();
@@ -312,7 +313,7 @@ int main(int argc, char** argv)
         float eng_torque = engine_torque(&engine, internal_throttle);
 
         float trans_torque = eng_torque * t_ratio;
-        float inv_inertia = engine.inv_inertia + diff.inv_inertia + gearbox_inertia(&gb);
+        float inertia = engine.inertia + gearbox_inertia(&gb) + diff.inertia;
 
         float left_torque;
         float right_torque;
@@ -321,8 +322,8 @@ int main(int argc, char** argv)
         wheel_update(&wfl, velocity, yaw_velocity, 0.0, 0.0f, dt);
         wheel_update(&wfr, velocity, yaw_velocity, 0.0, 0.0f, dt);
 
-        wheel_update(&wrl, velocity, yaw_velocity, inv_inertia, left_torque, dt);
-        wheel_update(&wrr, velocity, yaw_velocity, inv_inertia, right_torque, dt);
+        wheel_update(&wrl, velocity, yaw_velocity, inertia, left_torque, dt);
+        wheel_update(&wrr, velocity, yaw_velocity, inertia, right_torque, dt);
 
         add_json_wheel(&json_fl, &wfl);
         add_json_wheel(&json_fr, &wfr);
@@ -349,8 +350,8 @@ int main(int argc, char** argv)
         printf("Force: %f/%f\n", force.x, force.y);
 
         Vector2f old_velocity = velocity;
-        velocity.x += integrate(force.x * inv_vehicle_mass, dt);
-        velocity.y += integrate(force.y * inv_vehicle_mass, dt);
+        velocity.x += integrate(force.x / mass, dt);
+        velocity.y += integrate(force.y / mass, dt);
 
         if (signum(old_velocity.x) != signum(velocity.x)) {
             velocity.x = 0.0;
@@ -364,7 +365,7 @@ int main(int argc, char** argv)
             differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity) * t_ratio);
 
         float zz_torque = yaw_torque(&wfl, &wfr, &wrl, &wrr, wfl_f, wfr_f, wrl_f, wrr_f);
-        yaw_velocity += zz_torque * body.inv_i_zz * dt;
+        yaw_velocity += zz_torque / body.i_zz * dt;
         rotation += yaw_velocity * dt;
 
         printf("Engine velocity: %.1frpm. Torque: %f\n",

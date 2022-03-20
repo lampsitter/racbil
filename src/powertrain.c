@@ -2,12 +2,12 @@
 #include "common.h"
 #include <stdlib.h>
 
-Engine engine_new(float inv_inertia, Table torque_map, float max_map_rpm, float max_map_torque)
+Engine engine_new(float inertia, Table torque_map, float max_map_rpm, float max_map_torque)
 {
     return (Engine) {
         .torque_map = torque_map,
         .angular_velocity = 0.0f,
-        .inv_inertia = inv_inertia,
+        .inertia = inertia,
         .max_angular_velocity = angular_vel_rpm_to_rads(max_map_rpm),
         .max_torque = max_map_torque,
     };
