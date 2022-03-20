@@ -317,11 +317,11 @@ int main(int argc, char** argv)
         float right_torque;
         differential_torque(&diff, trans_torque, &left_torque, &right_torque);
 
-        wheel_update(&wfl, velocity, yaw_velocity, 0.0, 0.0f, dt, min_speed);
-        wheel_update(&wfr, velocity, yaw_velocity, 0.0, 0.0f, dt, min_speed);
+        wheel_update(&wfl, velocity, yaw_velocity, 0.0, 0.0f, dt);
+        wheel_update(&wfr, velocity, yaw_velocity, 0.0, 0.0f, dt);
 
-        wheel_update(&wrl, velocity, yaw_velocity, inv_inertia, left_torque, dt, min_speed);
-        wheel_update(&wrr, velocity, yaw_velocity, inv_inertia, right_torque, dt, min_speed);
+        wheel_update(&wrl, velocity, yaw_velocity, inv_inertia, left_torque, dt);
+        wheel_update(&wrr, velocity, yaw_velocity, inv_inertia, right_torque, dt);
 
         add_json_wheel(&json_fl, &wfl);
         add_json_wheel(&json_fr, &wfr);

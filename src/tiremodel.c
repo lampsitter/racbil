@@ -6,10 +6,7 @@ static inline float thread_velocity(float angular_velocity, float effective_radi
     return angular_velocity * effective_radius;
 }
 
-float slip_angle(Vector2f velocity, float angle)
-{
-    return atan(velocity.y / velocity.x) - angle;
-}
+float slip_angle(Vector2f velocity, float angle) { return atan(velocity.y / velocity.x) - angle; }
 
 float slip_ratio(Vector2f velocity, float angular_velocity, float effective_radius)
 {
