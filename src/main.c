@@ -191,10 +191,11 @@ int main(int argc, char** argv)
     torque_map.y[0] = 0.0;
     torque_map.y[1] = 1.0;
 
-    torque_map.z[0][0] = -0.2;
-    torque_map.z[0][1] = -0.2;
-    /* torque_map.z[0][0] = 0.0; */
-    /* torque_map.z[0][1] = 0.0; */
+    // FIXME: Can only provide braking torque once the clutch has been implemented
+    /* torque_map.z[0][0] = -0.2; */
+    /* torque_map.z[0][1] = -0.2; */
+    torque_map.z[0][0] = 0.0;
+    torque_map.z[0][1] = 0.0;
     torque_map.z[1][0] = 1.0;
     torque_map.z[1][1] = 1.0;
 
@@ -259,7 +260,7 @@ int main(int argc, char** argv)
     Wheel wrl = wheel_new(1.0 / 0.6, 0.344, rl_pos, min_speed);
     Wheel wrr = wheel_new(1.0 / 0.6, 0.344, rr_pos, min_speed);
 
-    engine.angular_velocity = min_speed / wrl.effective_radius;
+    engine.angular_velocity = differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity) * gearbox_ratio(&gb);
 
     cJSON* output_json = cJSON_CreateObject();
     cJSON* json_elapsed_time = json_create_arr();
