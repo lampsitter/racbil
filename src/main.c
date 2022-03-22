@@ -168,7 +168,7 @@ int main(int argc, char** argv)
 
     float elapsed_time = 0.0;
 
-    float dt = 1.0 / 50.0;
+    float dt = 1.0 / 100.0;
     float mass = 1580.0f;
     float gravity = 9.806f;
     float air_density = 1.2041f;
