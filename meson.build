@@ -25,10 +25,8 @@ source = files(
 m_dep = cc.find_library('m', required: false)
 json_dep = cc.find_library('cjson')
 
+library('c_racbil', ['src/racbil.h', source], dependencies: m_dep)
 executable('c_racbil', ['src/main.c', source], dependencies: [m_dep, json_dep])
-
-library('c_racbil', ['src/lib.c', source], dependencies: m_dep)
-
 
 test('test_common', executable('test_common', ['src/tests/common.c', source], dependencies: m_dep))
 test('test_cog', executable('test_cog', ['src/tests/cog.c', source], dependencies: m_dep))

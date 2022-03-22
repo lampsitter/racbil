@@ -1,8 +1,4 @@
-#include "body.h"
-#include "common.h"
-#include "powertrain.h"
-#include "tiremodel.h"
-#include "wheel.h"
+#include "racbil.h"
 #include <cjson/cJSON.h>
 #include <math.h>
 #include <stdbool.h>
