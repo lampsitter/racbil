@@ -45,3 +45,11 @@ float yaw_torque(Wheel* fl, Wheel* fr, Wheel* rl, Wheel* rr, Vector2f ffl, Vecto
 
     return y + x;
 }
+
+void set_ackerman_angle(float angle, float wheelbase, Wheel* wl, Wheel* wr)
+{
+    float a_tan = tanf(angle);
+
+    wl->angle = atanf((wheelbase * a_tan) / (wheelbase + a_tan * wl->position.y));
+    wr->angle = atanf((wheelbase * a_tan) / (wheelbase + a_tan * wr->position.y));
+}

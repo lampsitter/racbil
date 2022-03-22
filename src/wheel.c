@@ -15,8 +15,6 @@ Wheel wheel_new(float inertia, float radius, Vector2f position, float min_speed)
     };
 }
 
-void wheel_change_angle(Wheel* wheel, float angle) { wheel->angle = angle; }
-
 static Vector2f translate_velocity(
     Vector2f velocity_cog, float yaw_angular_velocity_cog, Vector2f position)
 {

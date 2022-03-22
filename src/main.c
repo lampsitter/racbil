@@ -166,7 +166,8 @@ int main(int argc, char** argv)
     float throttle_pos = 1.0;
     float brake_pos = 0.0;
     float clutch_pos = 0.0;
-    float steering_angle = 0.0;
+    float steering_angle = deg_to_rad(0.0);
+    float steering_ratio = 1.0 / 16.0;
 
     float elapsed_time = 0.0;
 
@@ -301,8 +302,8 @@ int main(int argc, char** argv)
 
     while (elapsed_time <= 60.0) {
         printf("--------------------------------\n");
-        wheel_change_angle(&wfl, steering_angle);
-        wheel_change_angle(&wfr, steering_angle);
+
+        set_ackerman_angle(steering_angle * steering_ratio, body.wheelbase, &wfl, &wfr);
 
         float t_ratio = gearbox_ratio(&gb);
 
@@ -375,7 +376,12 @@ int main(int argc, char** argv)
         Vector2f srl = wheel_slip(&wrl);
         Vector2f srr = wheel_slip(&wrr);
 
+        printf("Steering = %.3f, Throttle = %.3f, Brake: %.3f, Clutch = %.3f\n", steering_angle,
+            throttle_pos, brake_pos, clutch_pos);
         puts("Wheels:");
+        printf("\tAngle Fl = %f | Angle Fr = %f\n", wfl.angle, wfr.angle);
+        printf("\tAngle Rl = %f | Angle Rr = %f\n", wrl.angle, wrr.angle);
+
         printf("\tAngular Vel Fl = %f | Angular Vel Fr = %f\n", wfl.angular_velocity,
             wfr.angular_velocity);
         printf("\tAngular Vel Rl = %f | Angular Vel Rr = %f\n", wrl.angular_velocity,
