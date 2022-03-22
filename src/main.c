@@ -1,3 +1,4 @@
+#include "brake.h"
 #include "racbil.h"
 #include <cjson/cJSON.h>
 #include <math.h>
@@ -260,6 +261,12 @@ int main(int argc, char** argv)
         = differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity)
         * gearbox_ratio(&gb);
 
+    // brake system
+    MasterCylinder master_cyl = master_cylinder_new(17000e3, 0.65);
+    BrakeDisc bd = brake_disc_new(0.3, 0.24);
+    Caliper front_calipers = caliper_new(cylinder_from_diameter(0.5), 0.17, 2);
+    Caliper rear_calipers = caliper_new(cylinder_from_diameter(0.5), 0.18, 2);
+
     cJSON* output_json = cJSON_CreateObject();
     cJSON* json_elapsed_time = json_create_arr();
     cJSON_AddItemToObject(output_json, "elapsed_time", json_elapsed_time);
@@ -296,10 +303,22 @@ int main(int argc, char** argv)
     JsonWheel json_rr = json_wheel_new();
     cJSON_AddItemToObject(output_json, "rr_wheel", json_rr.obj);
 
+    int stage = 0;
     while (elapsed_time <= 60.0) {
+        if (stage == 0 && velocity.x >= 22.2) {
+            stage = 1;
+
+            throttle_pos = 0.0;
+            brake_pos = 1.0;
+        }
         printf("--------------------------------\n");
 
         set_ackerman_angle(steering_angle * steering_ratio, body.wheelbase, &wfl, &wfr);
+
+        float master_cyl_pressure = master_cyl.max_pressure * brake_pos;
+        float front_brake_pressure, rear_brake_pressure;
+        master_cylinder_pressure(
+            &master_cyl, master_cyl_pressure, &front_brake_pressure, &rear_brake_pressure);
 
         float t_ratio = gearbox_ratio(&gb);
 
@@ -316,9 +335,20 @@ int main(int argc, char** argv)
         float right_torque;
         differential_torque(&diff, trans_torque, &left_torque, &right_torque);
 
-        wheel_update(&wfl, velocity, yaw_velocity, 0.0, 0.0f, dt);
-        wheel_update(&wfr, velocity, yaw_velocity, 0.0, 0.0f, dt);
+        float fl_brake_torque
+            = brake_torque(&bd, &front_calipers, front_brake_pressure, wfl.angular_velocity);
+        float fr_brake_torque
+            = brake_torque(&bd, &front_calipers, front_brake_pressure, wfr.angular_velocity);
+        float rl_brake_torque
+            = brake_torque(&bd, &rear_calipers, rear_brake_pressure, wrl.angular_velocity);
+        float rr_brake_torque
+            = brake_torque(&bd, &rear_calipers, rear_brake_pressure, wrr.angular_velocity);
 
+        left_torque += rl_brake_torque;
+        right_torque += rr_brake_torque;
+
+        wheel_update(&wfl, velocity, yaw_velocity, 0.0, fl_brake_torque, dt);
+        wheel_update(&wfr, velocity, yaw_velocity, 0.0, fr_brake_torque, dt);
         wheel_update(&wrl, velocity, yaw_velocity, inertia, left_torque, dt);
         wheel_update(&wrr, velocity, yaw_velocity, inertia, right_torque, dt);
 
@@ -326,7 +356,6 @@ int main(int argc, char** argv)
         add_json_wheel(&json_fr, &wfr);
         add_json_wheel(&json_rl, &wrl);
         add_json_wheel(&json_rr, &wrr);
-
 
         float fz = mass * gravity * 0.5;
         float fzf_lift = body_lift_front(&body, air_density, velocity.x);

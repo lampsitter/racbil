@@ -20,6 +20,8 @@ source = files(
   'src/wheel.h',
   'src/body.c',
   'src/body.h',
+  'src/brake.h',
+  'src/brake.c',
 )
 
 m_dep = cc.find_library('m', required: false)
@@ -30,4 +32,5 @@ executable('c_racbil', ['src/main.c', source], dependencies: [m_dep, json_dep])
 
 test('test_common', executable('test_common', ['src/tests/common.c', source], dependencies: m_dep))
 test('test_cog', executable('test_cog', ['src/tests/cog.c', source], dependencies: m_dep))
+test('test_brakes', executable('test_brakes', ['src/tests/brakes.c', source], dependencies: m_dep))
 
