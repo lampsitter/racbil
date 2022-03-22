@@ -182,7 +182,7 @@ int main(int argc, char** argv)
     float yaw_velocity = 0.0;
     float rotation = 0.0;
 
-    Body body = body_new(2600.0, 0.36, 1.9, 3.6f, 1.47f, 1.475f);
+    Body body = body_new(2600.0, 0.36, 0.1, 0.07, 1.9, 3.6f, 1.47f, 1.475f);
 
     Table torque_map = table_with_capacity(2, 2);
     torque_map.x[0] = 0.0;
@@ -331,12 +331,18 @@ int main(int argc, char** argv)
         add_json_wheel(&json_rl, &wrl);
         add_json_wheel(&json_rr, &wrr);
 
-        float fz = mass * gravity * 0.25;
 
-        Vector2f fl_f = wheel_force(&wfl, &model, fz, 1.0);
-        Vector2f fr_f = wheel_force(&wfr, &model, fz, 1.0);
-        Vector2f rl_f = wheel_force(&wrl, &model, fz, 1.0);
-        Vector2f rr_f = wheel_force(&wrr, &model, fz, 1.0);
+        float fz = mass * gravity * 0.5;
+        float fzf_lift = body_lift_front(&body, air_density, velocity.x);
+        float fzr_lift = body_lift_rear(&body, air_density, velocity.x);
+
+        float fz_front = (fz + fzf_lift) * 0.5;
+        float fz_rear = (fz + fzr_lift) * 0.5;
+
+        Vector2f fl_f = wheel_force(&wfl, &model, fz_front, 1.0);
+        Vector2f fr_f = wheel_force(&wfr, &model, fz_front, 1.0);
+        Vector2f rl_f = wheel_force(&wrl, &model, fz_rear, 1.0);
+        Vector2f rr_f = wheel_force(&wrr, &model, fz_rear, 1.0);
 
         Vector2f wfl_f = vector2f_rotate(fl_f, -wfl.angle);
         Vector2f wfr_f = vector2f_rotate(fr_f, -wfr.angle);

@@ -16,13 +16,17 @@ float cog_distance_to_left(Cog cog, float track_width) { return track_width * 0.
 
 float cog_distance_to_right(Cog cog, float track_width) { return cog.y - track_width * 0.5; }
 
-Body body_new(float i_zz, float c_drag, float frontal_area, float wheelbase,
-    float front_track_width, float rear_track_width)
+Body body_new(float i_zz, float c_drag, float c_lift_front, float c_lift_rear, float frontal_area,
+    float wheelbase, float front_track_width, float rear_track_width)
 {
+
+    float half_a = 0.5 * frontal_area;
     return (Body) { .i_zz = i_zz,
         .c_drag = c_drag,
         .frontal_area = frontal_area,
-        .half_cd_a = 0.5 * c_drag * frontal_area,
+        .half_cd_a = half_a * c_drag,
+        .half_clf_a = half_a * c_lift_front,
+        .half_clr_a = half_a * c_lift_rear,
         .wheelbase = wheelbase,
         .front_track_width = front_track_width,
         .rear_track_width = rear_track_width };
@@ -32,6 +36,19 @@ float body_air_resistance(const Body* body, float air_density, float longitudina
 {
     float long_sq = longitudinal_velocity * longitudinal_velocity;
     return -(air_density * body->half_cd_a * long_sq) * signum(longitudinal_velocity);
+}
+
+// TODO: lift moment
+float body_lift_front(const Body* body, float air_density, float longitudinal_velocity)
+{
+    float long_sq = longitudinal_velocity * longitudinal_velocity;
+    return -air_density * body->half_clf_a * long_sq;
+}
+
+float body_lift_rear(const Body* body, float air_density, float longitudinal_velocity)
+{
+    float long_sq = longitudinal_velocity * longitudinal_velocity;
+    return -air_density * body->half_clr_a * long_sq;
 }
 
 float yaw_torque(Wheel* fl, Wheel* fr, Wheel* rl, Wheel* rr, Vector2f ffl, Vector2f ffr,

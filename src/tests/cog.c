@@ -4,7 +4,7 @@
 
 int main(void)
 {
-    Body body = body_new(2600.0, 0.36, 1.9, 3.6f, 1.47f, 1.475f);
+    Body body = body_new(2600.0, 0.36, 0.1, 0.07, 1.9, 3.6f, 1.47f, 1.475f);
     Cog cog = cog_from_distribution(0.55, 0.4, body.wheelbase);
 
     Vector2f fl_pos = (Vector2f) { .x = cog_distance_to_front(cog),

@@ -18,13 +18,17 @@ typedef struct {
     float wheelbase;
     float front_track_width, rear_track_width;
     float half_cd_a;
+    float half_clf_a;
+    float half_clr_a;
     float i_zz;
 } Body;
 
-Body body_new(float i_zz, float c_drag, float frontal_area, float wheelbase,
-    float front_track_width, float rear_track_width);
+Body body_new(float i_zz, float c_drag, float c_lift_front, float c_lift_rear, float frontal_area,
+    float wheelbase, float front_track_width, float rear_track_width);
 
 float body_air_resistance(const Body* body, float air_density, float longitudinal_velocity);
+float body_lift_front(const Body* body, float air_density, float longitudinal_velocity);
+float body_lift_rear(const Body* body, float air_density, float longitudinal_velocity);
 float yaw_torque(Wheel* fl, Wheel* fr, Wheel* rl, Wheel* rr, Vector2f ffl, Vector2f ffr,
     Vector2f frl, Vector2f frr);
 void set_ackerman_angle(float angle, float wheelbase, Wheel* wl, Wheel* wr);
