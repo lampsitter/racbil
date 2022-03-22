@@ -56,6 +56,8 @@ void vec_free(VecFloat* v)
 {
     free(v->elements);
     v->elements = NULL;
+    v->capacity = 0;
+    v->len = 0;
 }
 
 Table table_with_capacity(size_t x_elements, size_t y_elements)
