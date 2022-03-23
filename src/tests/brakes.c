@@ -24,6 +24,6 @@ int main(void)
 
     wheel_update(&w, (Vector2f) { .x = 2.0, .y = 0.0 }, 0.0, 0.0, bt, 1.0 / 400.0);
     assert(fabs(w.angular_velocity) < EPSILON);
-    assert(w.hub_velocity.x == min_speed);
+    assert(w.hub_velocity.x == 2.0);
     return 0;
 }
