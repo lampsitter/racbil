@@ -152,12 +152,17 @@ static void add_json_rotating(JsonRotating* e, float angular_velocity, float tor
 int main(int argc, char** argv)
 {
     bool should_write = false;
+    bool is_quiet = false;
 
-    if (argc == 2 && strcmp(argv[1], "--write") == 0) {
-        should_write = true;
-    } else if (argc >= 2) {
-        fprintf(stderr, "Unknown argument(s)\n");
-        exit(EXIT_FAILURE);
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "--write") == 0) {
+            should_write = true;
+        } else if (strcmp(argv[i], "--quiet") == 0) {
+            is_quiet = true;
+        } else {
+            fprintf(stderr, "Unknown argument(s)\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     float throttle_pos = 1.0;
@@ -352,7 +357,6 @@ int main(int argc, char** argv)
             clutch_pos = fminf(1.0, 1.0 - fmaxf(elapsed_time * elapsed_time, 0.0));
         }
 
-        printf("--------------------------------\n");
         set_ackerman_angle(steering_angle * steering_ratio, body.wheelbase, &wfl, &wfr);
 
         float master_cyl_pressure = master_cyl.max_pressure * brake_pos;
@@ -464,38 +468,42 @@ int main(int argc, char** argv)
         yaw_velocity += zz_torque / body.i_zz * dt;
         rotation += yaw_velocity * dt;
 
-        printf("Force: %f/%f\n", force.x, force.y);
-        printf("Engine velocity: %.1frpm. Torque: %f\n",
-            angular_vel_rads_to_rpm(engine.angular_velocity), clutch_torque_left);
-        printf("Gearbox input velocity: %.1frpm. Torque: %f\n",
-            angular_vel_rads_to_rpm(gb.input_angular_velocity), clutch_torque_right);
-        Vector2f sfl = wheel_slip(&wfl);
-        Vector2f sfr = wheel_slip(&wfr);
-        Vector2f srl = wheel_slip(&wrl);
-        Vector2f srr = wheel_slip(&wrr);
+        if (!is_quiet) {
+            printf("--------------------------------\n");
+            printf("Force: %f/%f\n", force.x, force.y);
+            printf("Engine velocity: %.1frpm. Torque: %f\n",
+                angular_vel_rads_to_rpm(engine.angular_velocity), clutch_torque_left);
+            printf("Gearbox input velocity: %.1frpm. Torque: %f\n",
+                angular_vel_rads_to_rpm(gb.input_angular_velocity), clutch_torque_right);
+            Vector2f sfl = wheel_slip(&wfl);
+            Vector2f sfr = wheel_slip(&wfr);
+            Vector2f srl = wheel_slip(&wrl);
+            Vector2f srr = wheel_slip(&wrr);
 
-        printf("Steering = %.3f, Throttle = %.3f, Brake: %.3f, Clutch = %.3f\n", steering_angle,
-            throttle_pos, brake_pos, clutch_pos);
-        puts("Wheels:");
-        printf("\tAngle Fl = %f | Angle Fr = %f\n", wfl.angle, wfr.angle);
-        printf("\tAngle Rl = %f | Angle Rr = %f\n", wrl.angle, wrr.angle);
+            printf("Steering = %.3f, Throttle = %.3f, Brake: %.3f, Clutch = %.3f\n", steering_angle,
+                throttle_pos, brake_pos, clutch_pos);
+            puts("Wheels:");
+            printf("\tAngle Fl = %f | Angle Fr = %f\n", wfl.angle, wfr.angle);
+            printf("\tAngle Rl = %f | Angle Rr = %f\n", wrl.angle, wrr.angle);
 
-        printf("\tAngular Vel Fl = %f | Angular Vel Fr = %f\n", wfl.angular_velocity,
-            wfr.angular_velocity);
-        printf("\tAngular Vel Rl = %f | Angular Vel Rr = %f\n", wrl.angular_velocity,
-            wrr.angular_velocity);
+            printf("\tAngular Vel Fl = %f | Angular Vel Fr = %f\n", wfl.angular_velocity,
+                wfr.angular_velocity);
+            printf("\tAngular Vel Rl = %f | Angular Vel Rr = %f\n", wrl.angular_velocity,
+                wrr.angular_velocity);
 
-        printf("\tHub Vel Fl x/y = %f/%f | Hub Vel Fr = %f/%f\n", wfl.hub_velocity.x,
-            wfl.hub_velocity.y, wfr.hub_velocity.x, wfr.hub_velocity.y);
-        printf("\tHub Vel Rl x/y = %f/%f | Hub Vel Rr = %f/%f\n", wrl.hub_velocity.x,
-            wrl.hub_velocity.y, wrr.hub_velocity.x, wrr.hub_velocity.y);
+            printf("\tHub Vel Fl x/y = %f/%f | Hub Vel Fr = %f/%f\n", wfl.hub_velocity.x,
+                wfl.hub_velocity.y, wfr.hub_velocity.x, wfr.hub_velocity.y);
+            printf("\tHub Vel Rl x/y = %f/%f | Hub Vel Rr = %f/%f\n", wrl.hub_velocity.x,
+                wrl.hub_velocity.y, wrr.hub_velocity.x, wrr.hub_velocity.y);
 
-        printf("\tSlip Fl x/y = %f/%f | Slip Fr = %f/%f\n", sfl.x, sfl.y, sfr.x, sfr.y);
-        printf("\tSlip Rl x/y = %f/%f | Slip Rr = %f/%f\n", srl.x, srl.y, srr.x, srr.y);
-        printf("\tForce Fl x/y = %f/%f | Force Fr = %f/%f\n", fl_f.x, fl_f.y, fr_f.x, fr_f.y);
-        printf("\tForce Rl x/y = %f/%f | Force Rr = %f/%f\n", rl_f.x, rl_f.y, rr_f.x, rr_f.y);
-        printf("Velocity(m/s) = %f/%f | Yaw velocity = %f\n", velocity.x, velocity.y, yaw_velocity);
-        puts("");
+            printf("\tSlip Fl x/y = %f/%f | Slip Fr = %f/%f\n", sfl.x, sfl.y, sfr.x, sfr.y);
+            printf("\tSlip Rl x/y = %f/%f | Slip Rr = %f/%f\n", srl.x, srl.y, srr.x, srr.y);
+            printf("\tForce Fl x/y = %f/%f | Force Fr = %f/%f\n", fl_f.x, fl_f.y, fr_f.x, fr_f.y);
+            printf("\tForce Rl x/y = %f/%f | Force Rr = %f/%f\n", rl_f.x, rl_f.y, rr_f.x, rr_f.y);
+            printf("Velocity(m/s) = %f/%f | Yaw velocity = %f\n", velocity.x, velocity.y,
+                yaw_velocity);
+            puts("");
+        }
 
         add_json_rotating(&json_engine, engine.angular_velocity, clutch_torque_left);
         add_json_rotating(&json_gearbox_input, gb.input_angular_velocity, clutch_torque_right);
