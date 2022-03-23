@@ -12,11 +12,9 @@ typedef struct {
     Table torque_map;
     AngularVelocity angular_velocity;
     float inertia;
-    float max_angular_velocity;
-    float max_torque;
 } Engine;
 
-Engine engine_new(float inertia, Table torque_map, float max_map_rpm, float max_map_torque);
+Engine engine_new(float inertia, Table torque_map);
 void engine_free(Engine* engine);
 float engine_torque(Engine* engine, float throttle_pos);
 void engine_set_angular_velocity(Engine* engine, AngularVelocity velocity);

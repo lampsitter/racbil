@@ -3,14 +3,12 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-Engine engine_new(float inertia, Table torque_map, float max_map_rpm, float max_map_torque)
+Engine engine_new(float inertia, Table torque_map)
 {
     return (Engine) {
         .torque_map = torque_map,
         .angular_velocity = 0.0f,
         .inertia = inertia,
-        .max_angular_velocity = angular_vel_rpm_to_rads(max_map_rpm),
-        .max_torque = max_map_torque,
     };
 }
 
@@ -18,9 +16,7 @@ void engine_free(Engine* engine) { table_free(&engine->torque_map); }
 
 float engine_torque(Engine* engine, float throttle_pos)
 {
-    float normalized_torque = table_lookup(
-        &engine->torque_map, throttle_pos, engine->angular_velocity / engine->max_angular_velocity);
-    return normalized_torque * engine->max_torque;
+    return table_lookup(&engine->torque_map, throttle_pos, engine->angular_velocity);
 }
 
 void engine_set_angular_velocity(Engine* engine, AngularVelocity velocity)
@@ -113,8 +109,8 @@ void clutch_torque_out(Clutch* clutch, float torque_in, float normal_force,
     // input normal force if necessary.
     float static_torque = clutch->static_coefficient * normal_force;
 
-    float threshold = 0.1;
-    float torque_sensitivity = 0.1;
+    float threshold = 1.0;
+    float torque_sensitivity = 2.0;
     if (fabsf(vel_diff) < threshold && fabsf(torque_in) <= static_torque) {
         // Locked
         *torque_left = torque_in;
