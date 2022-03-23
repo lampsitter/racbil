@@ -265,10 +265,10 @@ int main(int argc, char** argv)
     engine.angular_velocity = angular_vel_rpm_to_rads(1200.0);
 
     // brake system
-    MasterCylinder master_cyl = master_cylinder_new(17000e3, 0.65);
+    MasterCylinder master_cyl = master_cylinder_new(1200e3, 0.65);
     BrakeDisc bd = brake_disc_new(0.3, 0.24);
-    Caliper front_calipers = caliper_new(cylinder_from_diameter(0.5), 0.17, 2);
-    Caliper rear_calipers = caliper_new(cylinder_from_diameter(0.5), 0.18, 2);
+    Caliper front_calipers = caliper_new(cylinder_from_diameter(0.022), 0.17, 2);
+    Caliper rear_calipers = caliper_new(cylinder_from_diameter(0.022), 0.18, 2);
 
     cJSON* output_json = cJSON_CreateObject();
     cJSON* json_elapsed_time = json_create_arr();
