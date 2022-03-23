@@ -500,6 +500,9 @@ int main(int argc, char** argv)
             printf("\tSlip Rl x/y = %f/%f | Slip Rr = %f/%f\n", srl.x, srl.y, srr.x, srr.y);
             printf("\tForce Fl x/y = %f/%f | Force Fr = %f/%f\n", fl_f.x, fl_f.y, fr_f.x, fr_f.y);
             printf("\tForce Rl x/y = %f/%f | Force Rr = %f/%f\n", rl_f.x, rl_f.y, rr_f.x, rr_f.y);
+
+            printf("\tTorque Fl x/y = %f | Torque Fr = %f\n", fl_brake_torque, fr_brake_torque);
+            printf("\tTorque Rl x/y = %f | Torque Rr = %f\n", left_torque, right_torque);
             printf("Velocity(m/s) = %f/%f | Yaw velocity = %f\n", velocity.x, velocity.y,
                 yaw_velocity);
             puts("");
