@@ -319,7 +319,7 @@ int main(int argc, char** argv)
         }
 
         if (clutch_pos > 0.0) {
-            clutch_pos -= 0.001;
+            clutch_pos = fmax(clutch_pos - 0.001, 0.0);
         }
 
         printf("--------------------------------\n");
