@@ -1,6 +1,6 @@
-#include "brake.h"
 #include "racbil.h"
 #include <cjson/cJSON.h>
+#include <zlib.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -345,7 +345,7 @@ int main(int argc, char** argv)
     cJSON_AddItemToObject(output_json, "rr_wheel", json_rr.obj);
 
     int stage = 0;
-    while (elapsed_time <= 30.0) {
+    while (elapsed_time <= 60.0) {
         if (stage == 0 && velocity.x >= 22.2) {
             stage = 1;
 
@@ -525,7 +525,7 @@ int main(int argc, char** argv)
     gearbox_free(&gb);
 
     if (should_write) {
-        FILE* fs = fopen("../output.json", "w");
+        gzFile fs = gzopen("../output.json.gz", "wb");
         if (fs == NULL)
             exit(EXIT_FAILURE);
 
@@ -533,10 +533,11 @@ int main(int argc, char** argv)
         if (json_str == NULL)
             exit(EXIT_FAILURE);
 
-        fprintf(fs, "%s", json_str);
+        gzwrite(fs, json_str, strlen(json_str));
 
         free(json_str);
-        fclose(fs);
+        gzclose(fs);
+
         puts("Wrote to file output.json");
     }
 

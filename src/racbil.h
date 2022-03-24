@@ -6,5 +6,6 @@
 #include "powertrain.h"
 #include "tiremodel.h"
 #include "wheel.h"
+#include "brake.h"
 
 #endif

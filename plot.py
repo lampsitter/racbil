@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import gzip
 import itertools
 import math
 import sys
@@ -14,7 +15,7 @@ fig, axs = plt.subplots(num_plots_down, 2, constrained_layout=True,
 axs[0, 0].set_xlabel("Elapsed time(s)")
 
 data = None
-with open("output.json") as fs:
+with gzip.open("output.json.gz") as fs:
     data = json.load(fs)
 
 time = data["elapsed_time"]
