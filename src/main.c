@@ -69,6 +69,7 @@ typedef struct {
     cJSON* hub_velocity_y;
     cJSON* angle;
     cJSON* angular_velocity;
+    cJSON* input_torque;
     cJSON* reaction_torque;
     cJSON* slip_ratio;
     cJSON* slip_angle;
@@ -80,6 +81,7 @@ static JsonWheel json_wheel_new(void)
     cJSON* hub_velocity_y = json_create_arr();
     cJSON* angle = json_create_arr();
     cJSON* angular_velocity = json_create_arr();
+    cJSON* input_torque = json_create_arr();
     cJSON* reaction_torque = json_create_arr();
     cJSON* slip_ratio = json_create_arr();
     cJSON* slip_angle = json_create_arr();
@@ -90,6 +92,7 @@ static JsonWheel json_wheel_new(void)
     cJSON_AddItemToObject(obj, "hub_velocity_y", hub_velocity_y);
     cJSON_AddItemToObject(obj, "angle", angle);
     cJSON_AddItemToObject(obj, "angular_velocity", angular_velocity);
+    cJSON_AddItemToObject(obj, "input_torque", input_torque);
     cJSON_AddItemToObject(obj, "reaction_torque", reaction_torque);
 
     cJSON_AddItemToObject(obj, "slip_ratio", slip_ratio);
@@ -102,17 +105,19 @@ static JsonWheel json_wheel_new(void)
         .angle = angle,
         .angular_velocity = angular_velocity,
         .reaction_torque = reaction_torque,
+        .input_torque = input_torque,
         .slip_ratio = slip_ratio,
         .slip_angle = slip_angle,
     };
 }
 
-static void add_json_wheel(JsonWheel* j, const Wheel* w)
+static void add_json_wheel(JsonWheel* j, const Wheel* w, float input_torque)
 {
     cJSON_AddItemToArray(j->hub_velocity_x, cJSON_CreateNumber(w->hub_velocity.x));
     cJSON_AddItemToArray(j->hub_velocity_y, cJSON_CreateNumber(w->hub_velocity.y));
     cJSON_AddItemToArray(j->angle, cJSON_CreateNumber(w->angle));
     cJSON_AddItemToArray(j->angular_velocity, cJSON_CreateNumber(w->angular_velocity));
+    cJSON_AddItemToArray(j->input_torque, cJSON_CreateNumber(input_torque));
     cJSON_AddItemToArray(j->reaction_torque, cJSON_CreateNumber(w->reaction_torque));
 
     Vector2f slip = wheel_slip(w);
@@ -415,10 +420,10 @@ int main(int argc, char** argv)
         wheel_update(&wrl, velocity, yaw_velocity, right_inertia, left_torque, dt);
         wheel_update(&wrr, velocity, yaw_velocity, right_inertia, right_torque, dt);
 
-        add_json_wheel(&json_fl, &wfl);
-        add_json_wheel(&json_fr, &wfr);
-        add_json_wheel(&json_rl, &wrl);
-        add_json_wheel(&json_rr, &wrr);
+        add_json_wheel(&json_fl, &wfl, fl_brake_torque);
+        add_json_wheel(&json_fr, &wfr, fr_brake_torque);
+        add_json_wheel(&json_rl, &wrl, left_torque);
+        add_json_wheel(&json_rr, &wrr, right_torque);
 
         float fz = mass * gravity * 0.5;
         float fzf_lift = body_lift_front(&body, air_density, velocity.x);
