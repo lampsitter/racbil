@@ -349,6 +349,8 @@ int main(int argc, char** argv)
     JsonWheel json_rr = json_wheel_new();
     cJSON_AddItemToObject(output_json, "rr_wheel", json_rr.obj);
 
+    cJSON_AddNumberToObject(output_json, "dt", dt);
+
     int stage = 0;
     while (elapsed_time <= 60.0) {
         if (stage == 0 && velocity.x >= 22.2) {
