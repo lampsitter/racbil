@@ -57,7 +57,7 @@ void gearbox_free(Gearbox* gb)
     vec_free(&gb->inertias);
 }
 
-float gearbox_ratio(const Gearbox* trans)
+static float gearbox_ratio(const Gearbox* trans)
 {
     int curr_gear = trans->curr_gear;
     if (curr_gear < 0) {
@@ -79,6 +79,19 @@ float gearbox_inertia(const Gearbox* trans)
     } else {
         return trans->inertias.elements[curr_gear - 1];
     }
+}
+
+float gearbox_angular_velocity_in(Gearbox* gb, float angular_velocity_out)
+{
+    if (gb->curr_gear != 0) {
+        gb->input_angular_velocity = gearbox_ratio(gb) * angular_velocity_out;
+    }
+    return gb->input_angular_velocity;
+}
+
+float gearbox_torque_out(const Gearbox* gb, float torque_in)
+{
+    return gearbox_ratio(gb) * torque_in;
 }
 
 // Calculate max normal force from desired torque caracheristics of the clutch.

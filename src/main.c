@@ -1,12 +1,12 @@
 #include "racbil.h"
 #include <cjson/cJSON.h>
-#include <zlib.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <zlib.h>
 
 static inline cJSON* json_create_arr(void)
 {
@@ -301,9 +301,6 @@ int main(int argc, char** argv)
     Wheel wrl = wheel_new(0.6, 0.344, rl_pos, min_speed);
     Wheel wrr = wheel_new(0.6, 0.344, rr_pos, min_speed);
 
-    gb.input_angular_velocity = gearbox_ratio(&gb)
-        * differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity);
-
     // brake system
     MasterCylinder master_cyl = master_cylinder_new(1200e3, 0.65);
     BrakeDisc bd = brake_disc_new(0.3, 0.24);
@@ -371,8 +368,6 @@ int main(int argc, char** argv)
         master_cylinder_pressure(
             &master_cyl, master_cyl_pressure, &front_brake_pressure, &rear_brake_pressure);
 
-        float t_ratio = gearbox_ratio(&gb);
-
         float internal_throttle = throttle_pos;
         if (engine.angular_velocity > angular_vel_rpm_to_rads(4800.0)) {
             internal_throttle = 0.0;
@@ -399,7 +394,7 @@ int main(int argc, char** argv)
         engine_set_angular_velocity(
             &engine, engine.angular_velocity + clutch_torque_left / left_inertia * dt);
 
-        float trans_torque = clutch_torque_right * t_ratio;
+        float trans_torque = gearbox_torque_out(&gb, clutch_torque_right);
 
         float left_torque;
         float right_torque;
@@ -461,14 +456,11 @@ int main(int argc, char** argv)
         position.x += vel_world.x * dt;
         position.y += vel_world.y * dt;
 
-        if (gb.curr_gear != 0) {
-            gb.input_angular_velocity
-                = differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity)
-                * t_ratio;
-        }
+        float gearbox_velocity = gearbox_angular_velocity_in(
+            &gb, differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity));
 
         if (clutch.is_locked) {
-            engine_set_angular_velocity(&engine, gb.input_angular_velocity);
+            engine_set_angular_velocity(&engine, gearbox_velocity);
         }
 
         float zz_torque = yaw_torque(&wfl, &wfr, &wrl, &wrr, wfl_f, wfr_f, wrl_f, wrr_f);

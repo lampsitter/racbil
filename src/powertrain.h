@@ -40,8 +40,9 @@ typedef struct {
 
 Gearbox gearbox_new(VecFloat ratios, VecFloat inertias, float reverse_ratio, float reverse_inertia);
 void gearbox_free(Gearbox* gb);
-float gearbox_ratio(const Gearbox* trans);
-float gearbox_inertia(const Gearbox* trans);
+float gearbox_inertia(const Gearbox* gb);
+float gearbox_torque_out(const Gearbox* gb, float torque_in);
+float gearbox_angular_velocity_in(Gearbox* gb, float angular_velocity_out);
 
 typedef struct {
     float kinetic_coefficient;
