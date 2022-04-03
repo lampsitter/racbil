@@ -15,6 +15,7 @@ typedef struct {
 } Engine;
 
 Engine* engine_new(float inertia, Table torque_map);
+raTaggedComponent* ra_tag_engine(Engine* engine);
 void engine_free(Engine* engine);
 float engine_torque(Engine* engine, float throttle_pos);
 void engine_set_angular_velocity(Engine* engine, AngularVelocity velocity);
@@ -38,6 +39,7 @@ typedef struct {
 } Differential;
 
 Differential* differential_new(float ratio, float inertia);
+raTaggedComponent* ra_tag_differential(Differential* diff);
 void differential_torque(
     Differential* diff, float input_torque, float* output_left_torque, float* output_right_torque);
 float differential_velocity(
@@ -52,6 +54,7 @@ typedef struct {
 
 /**Reverse ratio/inertia is the first element in the lists*/
 Gearbox* gearbox_new(VecFloat ratios, VecFloat inertias);
+raTaggedComponent* ra_tag_gearbox(Gearbox* gb);
 void gearbox_free(Gearbox* gb);
 float gearbox_inertia(const Gearbox* gb);
 float gearbox_torque_out(const Gearbox* gb, float torque_in);
@@ -68,6 +71,7 @@ typedef struct {
 Clutch* clutch_with_torque(
     float* max_normal_force, float max_static_torque, float max_kinetic_torque);
 
+raTaggedComponent* ra_tag_clutch(Clutch* c);
 void clutch_torque_out(Clutch* clutch, float torque_in, float normal_force,
     AngularVelocity left_vel, AngularVelocity right_vel, float* torque_left, float* torque_right);
 

@@ -44,6 +44,11 @@ void engine_free(Engine* engine)
     free(engine);
 }
 
+raTaggedComponent* ra_tag_engine(Engine* engine)
+{
+    return ra_tagged_new(engine, (void (*)(void*))engine_free);
+}
+
 float engine_torque(Engine* engine, float throttle_pos)
 {
     return table_lookup(&engine->torque_map, throttle_pos, engine->angular_velocity);
@@ -61,6 +66,11 @@ Differential* differential_new(float ratio, float inertia)
     diff->ratio = ratio;
     diff->inertia = inertia;
     return diff;
+}
+
+raTaggedComponent* ra_tag_differential(Differential* diff)
+{
+    return ra_tagged_split_new(diff, free);
 }
 
 void differential_torque(
@@ -93,6 +103,11 @@ void gearbox_free(Gearbox* gb)
     vec_free(&gb->ratios);
     vec_free(&gb->inertias);
     free(gb);
+}
+
+raTaggedComponent* ra_tag_gearbox(Gearbox* gb)
+{
+    return ra_tagged_new(gb, (void (*)(void*))gearbox_free);
 }
 
 static float gearbox_current_gear(const Gearbox* gb, const VecFloat* vec)
@@ -140,6 +155,8 @@ Clutch* clutch_with_torque(
     c->is_locked = false;
     return c;
 }
+
+raTaggedComponent* ra_tag_clutch(Clutch* c) { return ra_tagged_new(c, free); }
 
 static inline float tanh_friction(float torque, AngularVelocity vel_diff, float transition)
 {

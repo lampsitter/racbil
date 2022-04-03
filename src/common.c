@@ -31,12 +31,15 @@ struct raTaggedComponent {
     /* void (*send_torque)(float torque, raTaggedComponent* next); */
     /* void (*receive_angular_velocity)(raTaggedComponent* next); */
     void* ty;
+    raTaggedComponent* prev;
     void (*free_fn)(void* ptr);
     enum raTy comp_ty;
     union raComponentTypes tty;
 };
 
-raTaggedComponent* ra_tagged_new(void* ty, raTaggedComponent* next, void (*free_fn)(void* ptr))
+void* ra_tagged_component_inner(raTaggedComponent* c) { return c->ty; }
+
+raTaggedComponent* ra_tagged_new(void* ty, void (*free_fn)(void* ptr))
 {
     assert(ty != NULL);
     assert(free_fn != NULL);
@@ -48,16 +51,28 @@ raTaggedComponent* ra_tagged_new(void* ty, raTaggedComponent* next, void (*free_
     t->comp_ty = raTyNormal;
     t->ty = ty;
     t->free_fn = free_fn;
+    t->prev = NULL;
 
     t->tty.normal = (raComponent) {
-        .next = next,
+        .next = NULL,
     };
 
     return t;
 }
 
-raTaggedComponent* ra_tagged_split_new(void* ty, raTaggedComponent* next_left,
-    raTaggedComponent* next_right, void (*free_fn)(void* ptr))
+int ra_tagged_add_next(raTaggedComponent* t, raTaggedComponent* next)
+{
+    if (t->comp_ty != raTyNormal) {
+        return -1;
+    } else {
+        t->tty.normal.next = next;
+        next->prev = t;
+    }
+
+    return 0;
+}
+
+raTaggedComponent* ra_tagged_split_new(void* ty, void (*free_fn)(void* ptr))
 {
     raTaggedComponent* t = malloc(sizeof *t);
     if (t == NULL) {
@@ -66,13 +81,38 @@ raTaggedComponent* ra_tagged_split_new(void* ty, raTaggedComponent* next_left,
     t->comp_ty = raTySplit;
     t->ty = ty;
     t->free_fn = free_fn;
+    t->prev = NULL;
 
     t->tty.split = (raSplitComponent) {
-        .next_left = next_left,
-        .next_right = next_right,
+        .next_left = NULL,
+        .next_right = NULL,
     };
 
     return t;
+}
+
+int ra_tagged_add_next_left(raTaggedComponent* t, raTaggedComponent* next)
+{
+    if (t->comp_ty != raTySplit) {
+        return -1;
+    } else {
+        t->tty.split.next_left = next;
+        next->prev = t;
+    }
+
+    return 0;
+}
+
+int ra_tagged_add_next_right(raTaggedComponent* t, raTaggedComponent* next)
+{
+    if (t->comp_ty != raTySplit) {
+        return -1;
+    } else {
+        t->tty.split.next_right = next;
+        next->prev = t;
+    }
+
+    return 0;
 }
 
 static void ra_free_split_component(raSplitComponent* c);

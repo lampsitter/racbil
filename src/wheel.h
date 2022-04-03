@@ -16,6 +16,7 @@ typedef struct {
 } Wheel;
 
 Wheel* wheel_new(float inertia, float radius, Vector2f position, float min_speed);
+raTaggedComponent* ra_tag_wheel(Wheel* w);
 
 Vector2f wheel_slip(const Wheel* wheel);
 void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocity_cog,

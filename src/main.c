@@ -1,4 +1,6 @@
+#include "common.h"
 #include "racbil.h"
+#include "wheel.h"
 #include <assert.h>
 #include <cjson/cJSON.h>
 #include <math.h>
@@ -310,15 +312,21 @@ int main(int argc, char** argv)
     Caliper front_calipers = caliper_new(cylinder_from_diameter(0.022), 0.17, 2);
     Caliper rear_calipers = caliper_new(cylinder_from_diameter(0.022), 0.18, 2);
 
-    raTaggedComponent* c_fl = ra_tagged_new(wfl, NULL, free);
-    raTaggedComponent* c_fr = ra_tagged_new(wfr, NULL, free);
+    raTaggedComponent* c_fl = ra_tag_wheel(wfl);
+    raTaggedComponent* c_fr = ra_tag_wheel(wfr);
+    raTaggedComponent* c_rl = ra_tag_wheel(wrl);
+    raTaggedComponent* c_rr = ra_tag_wheel(wrr);
 
-    raTaggedComponent* c_rl = ra_tagged_new(wrl, NULL, free);
-    raTaggedComponent* c_rr = ra_tagged_new(wrr, NULL, free);
-    raTaggedComponent* c_diff = ra_tagged_split_new(diff, c_rl, c_rr, free);
-    raTaggedComponent* c_gearbox = ra_tagged_new(gb, c_diff, (void (*)(void*))gearbox_free);
-    raTaggedComponent* c_clutch = ra_tagged_new(clutch, c_gearbox, free);
-    raTaggedComponent* c_engine = ra_tagged_new(engine, c_clutch, (void (*)(void*))engine_free);
+    raTaggedComponent* c_diff = ra_tag_differential(diff);
+    raTaggedComponent* c_gearbox = ra_tag_gearbox(gb);
+    raTaggedComponent* c_clutch = ra_tag_clutch(clutch);
+    raTaggedComponent* c_engine = ra_tag_engine(engine);
+
+    assert(ra_tagged_add_next(c_engine, c_clutch) == 0);
+    assert(ra_tagged_add_next(c_clutch, c_gearbox) == 0);
+    assert(ra_tagged_add_next(c_gearbox, c_diff) == 0);
+    assert(ra_tagged_add_next_left(c_diff, c_rl) == 0);
+    assert(ra_tagged_add_next_right(c_diff, c_rr) == 0);
 
     raOverviewSystem osys = ra_overwiew_system_new(3);
     osys.subsystems[0] = c_fl;
@@ -394,7 +402,7 @@ int main(int argc, char** argv)
             &clutch_torque_right);
 
         float right_inertia;
-        float right_only_inertia = diff->inertia + gearbox_inertia(&gb);
+        float right_only_inertia = diff->inertia + gearbox_inertia(gb);
         if (clutch->is_locked) {
             right_inertia = engine->inertia + right_only_inertia;
         } else {
