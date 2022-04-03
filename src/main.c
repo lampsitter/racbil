@@ -236,8 +236,8 @@ int main(int argc, char** argv)
     torque_map.z[1][12] = 90.0;
     torque_map.z[1][13] = 60.0;
 
-    Engine engine = engine_new(0.5, torque_map);
-    engine.angular_velocity = rpm_to_rads(1200.0);
+    Engine* engine = engine_new(0.5, torque_map);
+    engine->angular_velocity = rpm_to_rads(1200.0);
     RevLimiterHard limiter = rev_limiter_hard_new(rpm_to_rads(4800.0), rpm_to_rads(4650.0));
 
     int num_gears = 7;
@@ -260,12 +260,12 @@ int main(int argc, char** argv)
     vec_push_float(&inertias, 0.1);
 
     float clutch_normal_force;
-    Clutch clutch = clutch_with_torque(&clutch_normal_force, 300.0, 240.0);
+    Clutch* clutch = clutch_with_torque(&clutch_normal_force, 300.0, 240.0);
 
-    Gearbox gb = gearbox_new(ratios, inertias);
-    gb.curr_gear = 1;
+    Gearbox* gb = gearbox_new(ratios, inertias);
+    gb->curr_gear = 1;
 
-    Differential diff = (Differential) { .ratio = 2.4, .inertia = 0.18 };
+    Differential* diff = differential_new(2.4, 0.18);
 
     Cog cog = cog_from_distribution(0.55, 0.4, body.wheelbase);
 
@@ -298,11 +298,10 @@ int main(int argc, char** argv)
         .y = cog_distance_to_right(cog, body.rear_track_width) };
 
     float min_speed = 0.01;
-    Wheel wfl = wheel_new(0.6, 0.344, fl_pos, min_speed);
-    Wheel wfr = wheel_new(0.6, 0.344, fr_pos, min_speed);
-
-    Wheel wrl = wheel_new(0.6, 0.344, rl_pos, min_speed);
-    Wheel wrr = wheel_new(0.6, 0.344, rr_pos, min_speed);
+    Wheel* wfl = wheel_new(0.6, 0.344, fl_pos, min_speed);
+    Wheel* wfr = wheel_new(0.6, 0.344, fr_pos, min_speed);
+    Wheel* wrl = wheel_new(0.6, 0.344, rl_pos, min_speed);
+    Wheel* wrr = wheel_new(0.6, 0.344, rr_pos, min_speed);
 
     // brake system
     MasterCylinder master_cyl = master_cylinder_new(1200e3, 0.65);
@@ -364,56 +363,55 @@ int main(int argc, char** argv)
             clutch_pos = fminf(1.0, 1.0 - fmaxf(elapsed_time * elapsed_time, 0.0));
         }
 
-        set_ackerman_angle(steering_angle * steering_ratio, body.wheelbase, &wfl, &wfr);
+        set_ackerman_angle(steering_angle * steering_ratio, body.wheelbase, wfl, wfr);
 
         float master_cyl_pressure = master_cyl.max_pressure * brake_pos;
         float front_brake_pressure, rear_brake_pressure;
         master_cylinder_pressure(
             &master_cyl, master_cyl_pressure, &front_brake_pressure, &rear_brake_pressure);
 
-        float eng_torque
-            = engine_torque(&engine, rev_limiter_hard(&limiter, &engine, throttle_pos));
+        float eng_torque = engine_torque(engine, rev_limiter_hard(&limiter, engine, throttle_pos));
 
         float clutch_torque_left, clutch_torque_right;
-        clutch_torque_out(&clutch, eng_torque, clutch_normal_force * (1.0 - clutch_pos),
-            engine.angular_velocity, gb.input_angular_velocity, &clutch_torque_left,
+        clutch_torque_out(clutch, eng_torque, clutch_normal_force * (1.0 - clutch_pos),
+            engine->angular_velocity, gb->input_angular_velocity, &clutch_torque_left,
             &clutch_torque_right);
 
         float right_inertia;
-        float right_only_inertia = diff.inertia + gearbox_inertia(&gb);
-        if (clutch.is_locked) {
-            right_inertia = engine.inertia + right_only_inertia;
+        float right_only_inertia = diff->inertia + gearbox_inertia(&gb);
+        if (clutch->is_locked) {
+            right_inertia = engine->inertia + right_only_inertia;
         } else {
             right_inertia = right_only_inertia;
         }
 
-        float trans_torque = gearbox_torque_out(&gb, clutch_torque_right);
+        float trans_torque = gearbox_torque_out(gb, clutch_torque_right);
 
         float left_torque;
         float right_torque;
-        differential_torque(&diff, trans_torque, &left_torque, &right_torque);
+        differential_torque(diff, trans_torque, &left_torque, &right_torque);
 
         float fl_brake_torque
-            = brake_torque(&bd, &front_calipers, front_brake_pressure, wfl.angular_velocity);
+            = brake_torque(&bd, &front_calipers, front_brake_pressure, wfl->angular_velocity);
         float fr_brake_torque
-            = brake_torque(&bd, &front_calipers, front_brake_pressure, wfr.angular_velocity);
+            = brake_torque(&bd, &front_calipers, front_brake_pressure, wfr->angular_velocity);
         float rl_brake_torque
-            = brake_torque(&bd, &rear_calipers, rear_brake_pressure, wrl.angular_velocity);
+            = brake_torque(&bd, &rear_calipers, rear_brake_pressure, wrl->angular_velocity);
         float rr_brake_torque
-            = brake_torque(&bd, &rear_calipers, rear_brake_pressure, wrr.angular_velocity);
+            = brake_torque(&bd, &rear_calipers, rear_brake_pressure, wrr->angular_velocity);
 
         left_torque += rl_brake_torque;
         right_torque += rr_brake_torque;
 
-        wheel_update(&wfl, velocity, yaw_velocity, 0.0, fl_brake_torque, dt);
-        wheel_update(&wfr, velocity, yaw_velocity, 0.0, fr_brake_torque, dt);
-        wheel_update(&wrl, velocity, yaw_velocity, right_inertia, left_torque, dt);
-        wheel_update(&wrr, velocity, yaw_velocity, right_inertia, right_torque, dt);
+        wheel_update(wfl, velocity, yaw_velocity, 0.0, fl_brake_torque, dt);
+        wheel_update(wfr, velocity, yaw_velocity, 0.0, fr_brake_torque, dt);
+        wheel_update(wrl, velocity, yaw_velocity, right_inertia, left_torque, dt);
+        wheel_update(wrr, velocity, yaw_velocity, right_inertia, right_torque, dt);
 
-        add_json_wheel(&json_fl, &wfl, fl_brake_torque);
-        add_json_wheel(&json_fr, &wfr, fr_brake_torque);
-        add_json_wheel(&json_rl, &wrl, left_torque);
-        add_json_wheel(&json_rr, &wrr, right_torque);
+        add_json_wheel(&json_fl, wfl, fl_brake_torque);
+        add_json_wheel(&json_fr, wfr, fr_brake_torque);
+        add_json_wheel(&json_rl, wrl, left_torque);
+        add_json_wheel(&json_rr, wrr, right_torque);
 
         float fz = mass * gravity * 0.5;
         float fzf_lift = body_lift_front(&body, air_density, velocity.x);
@@ -422,15 +420,15 @@ int main(int argc, char** argv)
         float fz_front = (fz + fzf_lift) * 0.5;
         float fz_rear = (fz + fzr_lift) * 0.5;
 
-        Vector2f fl_f = wheel_force(&wfl, &model, fz_front, 1.0);
-        Vector2f fr_f = wheel_force(&wfr, &model, fz_front, 1.0);
-        Vector2f rl_f = wheel_force(&wrl, &model, fz_rear, 1.0);
-        Vector2f rr_f = wheel_force(&wrr, &model, fz_rear, 1.0);
+        Vector2f fl_f = wheel_force(wfl, &model, fz_front, 1.0);
+        Vector2f fr_f = wheel_force(wfr, &model, fz_front, 1.0);
+        Vector2f rl_f = wheel_force(wrl, &model, fz_rear, 1.0);
+        Vector2f rr_f = wheel_force(wrr, &model, fz_rear, 1.0);
 
-        Vector2f wfl_f = vector2f_rotate(fl_f, -wfl.angle);
-        Vector2f wfr_f = vector2f_rotate(fr_f, -wfr.angle);
-        Vector2f wrl_f = vector2f_rotate(rl_f, -wrl.angle);
-        Vector2f wrr_f = vector2f_rotate(rr_f, -wrr.angle);
+        Vector2f wfl_f = vector2f_rotate(fl_f, -wfl->angle);
+        Vector2f wfr_f = vector2f_rotate(fr_f, -wfr->angle);
+        Vector2f wrl_f = vector2f_rotate(rl_f, -wrl->angle);
+        Vector2f wrr_f = vector2f_rotate(rr_f, -wrr->angle);
 
         Vector2f resistance = body_air_resistance(&body, air_density, velocity.x);
         Vector2f force = VECTOR2F_PLUS(wfl_f, wfr_f, wrl_f, wrr_f, resistance);
@@ -448,46 +446,46 @@ int main(int argc, char** argv)
         position.y += vel_world.y * dt;
 
         float gearbox_velocity = gearbox_angular_velocity_in(
-            &gb, differential_velocity(&diff, wrl.angular_velocity, wrr.angular_velocity));
+            gb, differential_velocity(diff, wrl->angular_velocity, wrr->angular_velocity));
 
-        if (clutch.is_locked) {
-            engine_set_angular_velocity(&engine, gearbox_velocity);
+        if (clutch->is_locked) {
+            engine_set_angular_velocity(engine, gearbox_velocity);
         } else {
             engine_set_angular_velocity(
-                &engine, engine.angular_velocity + clutch_torque_left / engine.inertia * dt);
+                engine, engine->angular_velocity + clutch_torque_left / engine->inertia * dt);
         }
 
-        float zz_torque = yaw_torque(&wfl, &wfr, &wrl, &wrr, wfl_f, wfr_f, wrl_f, wrr_f);
+        float zz_torque = yaw_torque(wfl, wfr, wrl, wrr, wfl_f, wfr_f, wrl_f, wrr_f);
         yaw_velocity += zz_torque / body.i_zz * dt;
         rotation += yaw_velocity * dt;
 
         if (!is_quiet) {
             printf("--------------------------------\n");
             printf("Force: %f/%f\n", force.x, force.y);
-            printf("Engine velocity: %.1frpm. Torque: %f\n", rads_to_rpm(engine.angular_velocity),
+            printf("Engine velocity: %.1frpm. Torque: %f\n", rads_to_rpm(engine->angular_velocity),
                 clutch_torque_left);
             printf("Gearbox input velocity: %.1frpm. Torque: %f\n",
-                rads_to_rpm(gb.input_angular_velocity), clutch_torque_right);
-            Vector2f sfl = wheel_slip(&wfl);
-            Vector2f sfr = wheel_slip(&wfr);
-            Vector2f srl = wheel_slip(&wrl);
-            Vector2f srr = wheel_slip(&wrr);
+                rads_to_rpm(gb->input_angular_velocity), clutch_torque_right);
+            Vector2f sfl = wheel_slip(wfl);
+            Vector2f sfr = wheel_slip(wfr);
+            Vector2f srl = wheel_slip(wrl);
+            Vector2f srr = wheel_slip(wrr);
 
             printf("Steering = %f, Throttle = %f, Brake: %f, Clutch = %f\n", steering_angle,
                 throttle_pos, brake_pos, clutch_pos);
             puts("Wheels:");
-            printf("\tAngle Fl = %f | Angle Fr = %f\n", wfl.angle, wfr.angle);
-            printf("\tAngle Rl = %f | Angle Rr = %f\n", wrl.angle, wrr.angle);
+            printf("\tAngle Fl = %f | Angle Fr = %f\n", wfl->angle, wfr->angle);
+            printf("\tAngle Rl = %f | Angle Rr = %f\n", wrl->angle, wrr->angle);
 
-            printf("\tAngular Vel Fl = %f | Angular Vel Fr = %f\n", wfl.angular_velocity,
-                wfr.angular_velocity);
-            printf("\tAngular Vel Rl = %f | Angular Vel Rr = %f\n", wrl.angular_velocity,
-                wrr.angular_velocity);
+            printf("\tAngular Vel Fl = %f | Angular Vel Fr = %f\n", wfl->angular_velocity,
+                wfr->angular_velocity);
+            printf("\tAngular Vel Rl = %f | Angular Vel Rr = %f\n", wrl->angular_velocity,
+                wrr->angular_velocity);
 
-            printf("\tHub Vel Fl x/y = %f/%f | Hub Vel Fr = %f/%f\n", wfl.hub_velocity.x,
-                wfl.hub_velocity.y, wfr.hub_velocity.x, wfr.hub_velocity.y);
-            printf("\tHub Vel Rl x/y = %f/%f | Hub Vel Rr = %f/%f\n", wrl.hub_velocity.x,
-                wrl.hub_velocity.y, wrr.hub_velocity.x, wrr.hub_velocity.y);
+            printf("\tHub Vel Fl x/y = %f/%f | Hub Vel Fr = %f/%f\n", wfl->hub_velocity.x,
+                wfl->hub_velocity.y, wfr->hub_velocity.x, wfr->hub_velocity.y);
+            printf("\tHub Vel Rl x/y = %f/%f | Hub Vel Rr = %f/%f\n", wrl->hub_velocity.x,
+                wrl->hub_velocity.y, wrr->hub_velocity.x, wrr->hub_velocity.y);
 
             printf("\tSlip Fl x/y = %f/%f | Slip Fr = %f/%f\n", sfl.x, sfl.y, sfr.x, sfr.y);
             printf("\tSlip Rl x/y = %f/%f | Slip Rr = %f/%f\n", srl.x, srl.y, srr.x, srr.y);
@@ -503,21 +501,27 @@ int main(int argc, char** argv)
             puts("");
         }
 
-        add_json_rotating(&json_engine, engine.angular_velocity, clutch_torque_left);
-        add_json_rotating(&json_gearbox_input, gb.input_angular_velocity, clutch_torque_right);
+        add_json_rotating(&json_engine, engine->angular_velocity, clutch_torque_left);
+        add_json_rotating(&json_gearbox_input, gb->input_angular_velocity, clutch_torque_right);
         add_json_vehicle(&json_v, velocity, position, yaw_velocity);
 
         cJSON_AddItemToArray(json_throttle, cJSON_CreateNumber(throttle_pos));
         cJSON_AddItemToArray(json_brake, cJSON_CreateNumber(brake_pos));
         cJSON_AddItemToArray(json_clutch, cJSON_CreateNumber(clutch_pos));
         cJSON_AddItemToArray(json_steering, cJSON_CreateNumber(steering_angle));
-        cJSON_AddItemToArray(json_gear, cJSON_CreateNumber(gb.curr_gear));
+        cJSON_AddItemToArray(json_gear, cJSON_CreateNumber(gb->curr_gear));
         cJSON_AddItemToArray(json_elapsed_time, cJSON_CreateNumber(elapsed_time));
         elapsed_time += dt;
     }
 
-    engine_free(&engine);
-    gearbox_free(&gb);
+    engine_free(engine);
+    gearbox_free(gb);
+    free(clutch);
+    free(diff);
+    free(wfl);
+    free(wfr);
+    free(wrl);
+    free(wrr);
 
     if (should_write) {
         gzFile fs = gzopen("../output.json.gz", "wb");

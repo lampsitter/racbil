@@ -1,18 +1,19 @@
 #include "wheel.h"
 #include "common.h"
+#include <stdlib.h>
 
-Wheel wheel_new(float inertia, float radius, Vector2f position, float min_speed)
+Wheel* wheel_new(float inertia, float radius, Vector2f position, float min_speed)
 {
-    return (Wheel) {
-        .inertia = inertia,
-        .effective_radius = radius,
-        .position = position,
-        .min_speed = min_speed,
-        .angular_velocity = min_speed / radius,
-        .hub_velocity = (Vector2f) { .x = min_speed, .y = 0.0 },
-        .angle = 0.0,
-        .reaction_torque = 0.0f,
-    };
+    Wheel* w = malloc(sizeof *w);
+    w->inertia = inertia;
+    w->effective_radius = radius;
+    w->position = position;
+    w->min_speed = min_speed;
+    w->angular_velocity = min_speed / radius;
+    w->hub_velocity = (Vector2f) { .x = min_speed, .y = 0.0 };
+    w->angle = 0.0;
+    w->reaction_torque = 0.0;
+    return w;
 }
 
 static Vector2f translate_velocity(

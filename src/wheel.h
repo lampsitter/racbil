@@ -15,7 +15,7 @@ typedef struct {
     float reaction_torque;
 } Wheel;
 
-Wheel wheel_new(float inertia, float radius, Vector2f position, float min_speed);
+Wheel* wheel_new(float inertia, float radius, Vector2f position, float min_speed);
 
 Vector2f wheel_slip(const Wheel* wheel);
 void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocity_cog,

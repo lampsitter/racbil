@@ -28,16 +28,21 @@ float rev_limiter_hard(RevLimiterHard* r, Engine* e, float throttle_pos)
     }
 }
 
-Engine engine_new(float inertia, Table torque_map)
+Engine* engine_new(float inertia, Table torque_map)
 {
-    return (Engine) {
-        .torque_map = torque_map,
-        .angular_velocity = 0.0f,
-        .inertia = inertia,
-    };
+
+    Engine* engine = malloc(sizeof *engine);
+    engine->torque_map = torque_map;
+    engine->angular_velocity = 0.0f;
+    engine->inertia = inertia;
+    return engine;
 }
 
-void engine_free(Engine* engine) { table_free(&engine->torque_map); }
+void engine_free(Engine* engine)
+{
+    table_free(&engine->torque_map);
+    free(engine);
+}
 
 float engine_torque(Engine* engine, float throttle_pos)
 {
@@ -47,6 +52,15 @@ float engine_torque(Engine* engine, float throttle_pos)
 void engine_set_angular_velocity(Engine* engine, AngularVelocity velocity)
 {
     engine->angular_velocity = fmaxf(velocity, 0.0);
+}
+
+Differential* differential_new(float ratio, float inertia)
+{
+
+    Differential* diff = malloc(sizeof *diff);
+    diff->ratio = ratio;
+    diff->inertia = inertia;
+    return diff;
 }
 
 void differential_torque(
@@ -64,20 +78,21 @@ float differential_velocity(
     return (left_angular_velocity + right_angular_velocity) * 0.5 * diff->ratio;
 }
 
-Gearbox gearbox_new(VecFloat ratios, VecFloat inertias)
+Gearbox* gearbox_new(VecFloat ratios, VecFloat inertias)
 {
-    return (Gearbox) {
-        .ratios = ratios,
-        .inertias = inertias,
-        .curr_gear = 0,
-        .input_angular_velocity = 0.0,
-    };
+    Gearbox* gb = malloc(sizeof *gb);
+    gb->ratios = ratios;
+    gb->inertias = inertias;
+    gb->curr_gear = 0;
+    gb->input_angular_velocity = 0.0;
+    return gb;
 }
 
 void gearbox_free(Gearbox* gb)
 {
     vec_free(&gb->ratios);
     vec_free(&gb->inertias);
+    free(gb);
 }
 
 static float gearbox_current_gear(const Gearbox* gb, const VecFloat* vec)
@@ -110,18 +125,20 @@ float gearbox_torque_out(const Gearbox* gb, float torque_in)
 }
 
 // Calculate max normal force from desired torque caracheristics of the clutch.
-Clutch clutch_with_torque(
+Clutch* clutch_with_torque(
     float* max_normal_force, float max_static_torque, float max_kinetic_torque)
 {
     *max_normal_force = max_static_torque;
     float static_coefficient = 1.0f;
     float kinetic_coefficient = max_kinetic_torque / *max_normal_force;
 
-    return (Clutch) { .static_coefficient = static_coefficient,
-        .kinetic_coefficient = kinetic_coefficient,
-        .velocity_threshold = 1.0,
-        .torque_sensitivity = 2.0,
-        .is_locked = false };
+    Clutch* c = malloc(sizeof *c);
+    c->static_coefficient = static_coefficient;
+    c->kinetic_coefficient = kinetic_coefficient;
+    c->velocity_threshold = 1.0;
+    c->torque_sensitivity = 2.0;
+    c->is_locked = false;
+    return c;
 }
 
 static inline float tanh_friction(float torque, AngularVelocity vel_diff, float transition)

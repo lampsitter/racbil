@@ -2,11 +2,13 @@
 #include "../common.h"
 #include "../wheel.h"
 #include <assert.h>
+#include <stdlib.h>
 
 int main(void)
 {
     float min_speed = 0.01;
-    Wheel w = wheel_new(0.5, 0.344, (Vector2f) { .x = 0.0, .y = 0.0 }, min_speed);
+    Wheel* ww = wheel_new(0.5, 0.344, (Vector2f) { .x = 0.0, .y = 0.0 }, min_speed);
+    Wheel w = *ww;
     assert(w.angular_velocity == min_speed / w.effective_radius);
     assert(w.hub_velocity.x == min_speed);
 
@@ -25,5 +27,7 @@ int main(void)
     wheel_update(&w, (Vector2f) { .x = 2.0, .y = 0.0 }, 0.0, 0.0, bt, 1.0 / 400.0);
     assert(fabs(w.angular_velocity) < EPSILON);
     assert(w.hub_velocity.x == 2.0);
+
+    free(ww);
     return 0;
 }

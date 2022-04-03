@@ -14,7 +14,7 @@ typedef struct {
     float inertia;
 } Engine;
 
-Engine engine_new(float inertia, Table torque_map);
+Engine* engine_new(float inertia, Table torque_map);
 void engine_free(Engine* engine);
 float engine_torque(Engine* engine, float throttle_pos);
 void engine_set_angular_velocity(Engine* engine, AngularVelocity velocity);
@@ -37,6 +37,7 @@ typedef struct {
     float inertia;
 } Differential;
 
+Differential* differential_new(float ratio, float inertia);
 void differential_torque(
     Differential* diff, float input_torque, float* output_left_torque, float* output_right_torque);
 float differential_velocity(
@@ -50,7 +51,7 @@ typedef struct {
 } Gearbox;
 
 /**Reverse ratio/inertia is the first element in the lists*/
-Gearbox gearbox_new(VecFloat ratios, VecFloat inertias);
+Gearbox* gearbox_new(VecFloat ratios, VecFloat inertias);
 void gearbox_free(Gearbox* gb);
 float gearbox_inertia(const Gearbox* gb);
 float gearbox_torque_out(const Gearbox* gb, float torque_in);
@@ -64,7 +65,7 @@ typedef struct {
     bool is_locked;
 } Clutch;
 
-Clutch clutch_with_torque(
+Clutch* clutch_with_torque(
     float* max_normal_force, float max_static_torque, float max_kinetic_torque);
 
 void clutch_torque_out(Clutch* clutch, float torque_in, float normal_force,
