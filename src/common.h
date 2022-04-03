@@ -8,6 +8,27 @@
 #define M_PI 3.14159265358979323846264338327950288
 #endif
 
+typedef struct raTaggedComponent raTaggedComponent;
+
+/** Create a component */
+raTaggedComponent* ra_tagged_new(void* ty, raTaggedComponent* next, void (*free_fn)(void* ptr));
+
+/** Create a component with two outputs */
+raTaggedComponent* ra_tagged_split_new(void* ty, raTaggedComponent* next_left,
+    raTaggedComponent* next_right, void (*free_fn)(void* ptr));
+
+void ra_tagged_component_free(raTaggedComponent* c);
+
+// Updates all subsystems, this is needed for updating both driven and undriven wheels, which are
+// independent systems
+typedef struct {
+    size_t num_subsystems;
+    raTaggedComponent** subsystems;
+} raOverviewSystem;
+
+raOverviewSystem ra_overwiew_system_new(size_t max_subsystems);
+void ra_overwiew_system_free(raOverviewSystem o);
+
 typedef float AngularVelocity;
 
 float rads_to_rpm(AngularVelocity rads);

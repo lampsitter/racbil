@@ -8,6 +8,134 @@
 
 inline float rads_to_rpm(AngularVelocity rads) { return rads * 60.0 / (2.0 * M_PI); }
 inline float rpm_to_rads(AngularVelocity rpm) { return 2.0 * M_PI * rpm / 60.0; }
+typedef struct raTaggedComponent raTaggedComponent;
+
+typedef struct {
+    raTaggedComponent* next;
+} raComponent;
+
+typedef struct {
+    raTaggedComponent* next_left;
+    raTaggedComponent* next_right;
+} raSplitComponent;
+
+enum raTy { raTyNormal, raTySplit };
+
+union raComponentTypes {
+    raSplitComponent split;
+    raComponent normal;
+};
+
+struct raTaggedComponent {
+    /* float (*angular_velocity)(void); */
+    /* void (*send_torque)(float torque, raTaggedComponent* next); */
+    /* void (*receive_angular_velocity)(raTaggedComponent* next); */
+    void* ty;
+    void (*free_fn)(void* ptr);
+    enum raTy comp_ty;
+    union raComponentTypes tty;
+};
+
+raTaggedComponent* ra_tagged_new(void* ty, raTaggedComponent* next, void (*free_fn)(void* ptr))
+{
+    assert(ty != NULL);
+    assert(free_fn != NULL);
+
+    raTaggedComponent* t = malloc(sizeof *t);
+    if (t == NULL) {
+        abort();
+    }
+    t->comp_ty = raTyNormal;
+    t->ty = ty;
+    t->free_fn = free_fn;
+
+    t->tty.normal = (raComponent) {
+        .next = next,
+    };
+
+    return t;
+}
+
+raTaggedComponent* ra_tagged_split_new(void* ty, raTaggedComponent* next_left,
+    raTaggedComponent* next_right, void (*free_fn)(void* ptr))
+{
+    raTaggedComponent* t = malloc(sizeof *t);
+    if (t == NULL) {
+        abort();
+    }
+    t->comp_ty = raTySplit;
+    t->ty = ty;
+    t->free_fn = free_fn;
+
+    t->tty.split = (raSplitComponent) {
+        .next_left = next_left,
+        .next_right = next_right,
+    };
+
+    return t;
+}
+
+static void ra_free_split_component(raSplitComponent* c);
+static void ra_free_component(raComponent* c);
+
+void ra_tagged_component_free(raTaggedComponent* c)
+{
+    if (c->comp_ty == raTyNormal) {
+        ra_free_component(&c->tty.normal);
+    } else if (c->comp_ty == raTySplit) {
+        ra_free_split_component(&c->tty.split);
+    } else {
+        // This should be unreachable
+        abort();
+    }
+
+    c->free_fn(c->ty);
+
+    free(c);
+}
+
+static void ra_free_component(raComponent* c)
+{
+    if (c->next != NULL) {
+        ra_tagged_component_free(c->next);
+    }
+}
+
+static void ra_free_split_component(raSplitComponent* c)
+{
+    if (c->next_left != NULL) {
+        ra_tagged_component_free(c->next_left);
+    }
+
+    if (c->next_right != NULL) {
+        ra_tagged_component_free(c->next_right);
+    }
+}
+
+// TODO: Growable list
+raOverviewSystem ra_overwiew_system_new(size_t max_subsystems)
+{
+    raTaggedComponent** subsystems = malloc(max_subsystems * sizeof *subsystems);
+    if (subsystems == NULL) {
+        abort();
+    }
+
+    return (raOverviewSystem) {
+        .num_subsystems = max_subsystems,
+        .subsystems = subsystems,
+    };
+}
+
+void ra_overwiew_system_free(raOverviewSystem o)
+{
+    for (size_t i = 0; i < o.num_subsystems; i++) {
+        ra_tagged_component_free(o.subsystems[i]);
+    }
+    free(o.subsystems);
+
+    o.num_subsystems = 0;
+    o.subsystems = NULL;
+}
 
 Vector2f vector2f_default(void) { return (Vector2f) { .x = 0.0f, .y = 0.0f }; }
 
@@ -33,8 +161,8 @@ Vector2f vector2f_plus_vec(size_t num_args, ...)
 
 Vector2f vector2f_rotate(Vector2f v, float angle)
 {
-    float a_sin = sin(angle);
-    float a_cos = cos(angle);
+    float a_sin = sinf(angle);
+    float a_cos = cosf(angle);
     float x = v.x * a_cos - v.y * a_sin;
     float y = v.x * a_sin + v.y * a_cos;
 
@@ -56,6 +184,9 @@ float signum(float v) { return (copysignf(1.0, v)); }
 VecFloat vec_with_capacity(int capacity)
 {
     float* elements = malloc(sizeof *elements * capacity);
+    if (elements == NULL) {
+        abort();
+    }
 
     return (VecFloat) { .elements = elements, .capacity = capacity, .len = 0 };
 }

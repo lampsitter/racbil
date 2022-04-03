@@ -1,4 +1,5 @@
 #include "racbil.h"
+#include <assert.h>
 #include <cjson/cJSON.h>
 #include <math.h>
 #include <stdbool.h>
@@ -309,6 +310,21 @@ int main(int argc, char** argv)
     Caliper front_calipers = caliper_new(cylinder_from_diameter(0.022), 0.17, 2);
     Caliper rear_calipers = caliper_new(cylinder_from_diameter(0.022), 0.18, 2);
 
+    raTaggedComponent* c_fl = ra_tagged_new(wfl, NULL, free);
+    raTaggedComponent* c_fr = ra_tagged_new(wfr, NULL, free);
+
+    raTaggedComponent* c_rl = ra_tagged_new(wrl, NULL, free);
+    raTaggedComponent* c_rr = ra_tagged_new(wrr, NULL, free);
+    raTaggedComponent* c_diff = ra_tagged_split_new(diff, c_rl, c_rr, free);
+    raTaggedComponent* c_gearbox = ra_tagged_new(gb, c_diff, (void (*)(void*))gearbox_free);
+    raTaggedComponent* c_clutch = ra_tagged_new(clutch, c_gearbox, free);
+    raTaggedComponent* c_engine = ra_tagged_new(engine, c_clutch, (void (*)(void*))engine_free);
+
+    raOverviewSystem osys = ra_overwiew_system_new(3);
+    osys.subsystems[0] = c_fl;
+    osys.subsystems[1] = c_fr;
+    osys.subsystems[2] = c_engine;
+
     cJSON* output_json = cJSON_CreateObject();
     cJSON* json_elapsed_time = json_create_arr();
     cJSON_AddItemToObject(output_json, "elapsed_time", json_elapsed_time);
@@ -514,14 +530,7 @@ int main(int argc, char** argv)
         elapsed_time += dt;
     }
 
-    engine_free(engine);
-    gearbox_free(gb);
-    free(clutch);
-    free(diff);
-    free(wfl);
-    free(wfr);
-    free(wrl);
-    free(wrr);
+    ra_overwiew_system_free(osys);
 
     if (should_write) {
         gzFile fs = gzopen("../output.json.gz", "wb");
