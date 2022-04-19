@@ -104,6 +104,8 @@ Clutch clutch_with_torque(
 
     return (Clutch) { .static_coefficient = static_coefficient,
         .kinetic_coefficient = kinetic_coefficient,
+        .velocity_threshold = 1.0,
+        .torque_sensitivity = 2.0,
         .is_locked = false };
 }
 
@@ -121,10 +123,7 @@ void clutch_torque_out(Clutch* clutch, float torque_in, float normal_force,
     // of variables that need to be configured. It can be compensated for by including it in the
     // input normal force if necessary.
     float static_torque = clutch->static_coefficient * normal_force;
-
-    float threshold = 1.0;
-    float torque_sensitivity = 2.0;
-    if (fabsf(vel_diff) < threshold && fabsf(torque_in) <= static_torque) {
+    if (fabsf(vel_diff) < clutch->velocity_threshold && fabsf(torque_in) <= static_torque) {
         // Locked
         *torque_left = torque_in;
         *torque_right = torque_in;
@@ -132,7 +131,7 @@ void clutch_torque_out(Clutch* clutch, float torque_in, float normal_force,
     } else {
         // Slipping
         float kinetic_torque = clutch->kinetic_coefficient * normal_force;
-        float out_torque = tanh_friction(kinetic_torque, vel_diff, torque_sensitivity);
+        float out_torque = tanh_friction(kinetic_torque, vel_diff, clutch->torque_sensitivity);
         *torque_left = torque_in - out_torque;
         *torque_right = out_torque;
         clutch->is_locked = false;

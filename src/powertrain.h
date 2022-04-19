@@ -45,6 +45,8 @@ float gearbox_torque_out(const Gearbox* gb, float torque_in);
 float gearbox_angular_velocity_in(Gearbox* gb, float angular_velocity_out);
 
 typedef struct {
+    float velocity_threshold;
+    float torque_sensitivity;
     float kinetic_coefficient;
     float static_coefficient;
     bool is_locked;
