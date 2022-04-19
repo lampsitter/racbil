@@ -2,39 +2,13 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef struct raTaggedComponent raTaggedComponent;
-
-typedef struct {
-    raTaggedComponent* next;
-} raComponent;
-
-typedef struct {
-    raTaggedComponent* next_left;
-    raTaggedComponent* next_right;
-} raSplitComponent;
-
-enum raTy { raTyNormal, raTySplit };
-
-union raComponentTypes {
-    raSplitComponent split;
-    raComponent normal;
-};
-
-struct raTaggedComponent {
-    /* float (*angular_velocity)(void); */
-    /* void (*send_torque)(float torque, raTaggedComponent* next); */
-    /* void (*receive_angular_velocity)(raTaggedComponent* next); */
-    void* ty;
-    raTaggedComponent* prev;
-    void (*free_fn)(void* ptr);
-    float (*inertia_fn)(void* ty);
-    enum raTy comp_ty;
-    union raComponentTypes tty;
-};
-
 void* ra_tagged_component_inner(raTaggedComponent* c) { return c->ty; }
 
-raTaggedComponent* ra_tagged_new(void* ty, float (*inertia)(void* ty), void (*free_fn)(void* ptr))
+raTaggedComponent* ra_tagged_new(void* ty, float (*inertia)(void* ty),
+    float (*angular_velocity)(raTaggedComponent* t),
+    void (*send_torque_fn)(void* ty, raVelocities v, float torque, float dt,
+        raTaggedComponent* prev, raTaggedComponent* next),
+    void (*free_fn)(void* ptr))
 {
     assert(ty != NULL);
     assert(free_fn != NULL);
@@ -47,10 +21,11 @@ raTaggedComponent* ra_tagged_new(void* ty, float (*inertia)(void* ty), void (*fr
     t->ty = ty;
     t->free_fn = free_fn;
     t->inertia_fn = inertia;
-    t->prev = NULL;
+    t->angular_velocity_fn = angular_velocity, t->prev = NULL;
 
     t->tty.normal = (raComponent) {
         .next = NULL,
+        .send_torque_fn = send_torque_fn,
     };
 
     return t;
@@ -68,8 +43,11 @@ int ra_tagged_add_next(raTaggedComponent* t, raTaggedComponent* next)
     return 0;
 }
 
-raTaggedComponent* ra_tagged_split_new(
-    void* ty, float (*inertia)(void* ty), void (*free_fn)(void* ptr))
+raTaggedComponent* ra_tagged_split_new(void* ty, float (*inertia)(void* ty),
+    float (*angular_velocity)(raTaggedComponent* t),
+    void (*send_torque_fn)(void* ty, raVelocities v, float torque, float dt,
+        raTaggedComponent* prev, raTaggedComponent* next_left, raTaggedComponent* next_right),
+    void (*free_fn)(void* ptr))
 {
     raTaggedComponent* t = malloc(sizeof *t);
     if (t == NULL) {
@@ -79,11 +57,12 @@ raTaggedComponent* ra_tagged_split_new(
     t->ty = ty;
     t->free_fn = free_fn;
     t->inertia_fn = inertia;
-    t->prev = NULL;
+    t->angular_velocity_fn = angular_velocity, t->prev = NULL;
 
     t->tty.split = (raSplitComponent) {
         .next_left = NULL,
         .next_right = NULL,
+        .send_torque_fn = send_torque_fn,
     };
 
     return t;
@@ -173,4 +152,15 @@ void ra_overwiew_system_free(raOverviewSystem o)
 
     o.num_subsystems = 0;
     o.subsystems = NULL;
+}
+
+void ra_tagged_send_torque(raTaggedComponent* t, float torque, raVelocities v, float dt)
+{
+    if (t->comp_ty == raTyNormal) {
+        raComponent ty = t->tty.normal;
+        ty.send_torque_fn(t->ty, v, torque, dt, t->prev, ty.next);
+    } else if (t->comp_ty == raTySplit) {
+        raSplitComponent ty = t->tty.split;
+        ty.send_torque_fn(t->ty, v, torque, dt, t->prev, ty.next_left, ty.next_right);
+    }
 }

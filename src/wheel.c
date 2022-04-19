@@ -16,10 +16,6 @@ Wheel* wheel_new(float inertia, float radius, Vector2f position, float min_speed
     return w;
 }
 
-static float wheel_inertia(void* ty) { return ((Wheel*)ty)->inertia; }
-
-raTaggedComponent* ra_tag_wheel(Wheel* w) { return ra_tagged_new(w, wheel_inertia, free); }
-
 static Vector2f translate_velocity(
     Vector2f velocity_cog, float yaw_angular_velocity_cog, Vector2f position)
 {
@@ -80,6 +76,25 @@ void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocit
 static float wheel_reaction_torque(const Wheel* wheel, Vector2f force)
 {
     return -force.x * wheel->effective_radius;
+}
+
+static float wheel_inertia(void* ty) { return ((Wheel*)ty)->inertia; }
+static float wheel_ang_vel(raTaggedComponent* t) { return ((Wheel*)t->ty)->angular_velocity; }
+
+static void wheel_send_torque(void* ty, raVelocities v, float torque, float dt,
+    raTaggedComponent* prev, raTaggedComponent* next)
+{
+    SUPPRESS_UNUSED(prev);
+    SUPPRESS_UNUSED(next);
+
+    // TODO: Inertia
+    float inertia = 0.0;
+    wheel_update((Wheel*)ty, v.velocity_cog, v.yaw_velocity_cog, inertia, torque, dt);
+}
+
+raTaggedComponent* ra_tag_wheel(Wheel* w)
+{
+    return ra_tagged_new(w, wheel_inertia, wheel_ang_vel, wheel_send_torque, free);
 }
 
 Vector2f wheel_slip(const Wheel* wheel)

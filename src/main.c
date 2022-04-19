@@ -394,24 +394,8 @@ int main(int argc, char** argv)
 
         float eng_torque = engine_torque(engine, rev_limiter_hard(&limiter, engine, throttle_pos));
 
-        float clutch_torque_left, clutch_torque_right;
-        clutch_torque_out(clutch, eng_torque, clutch_normal_force * (1.0 - clutch_pos),
-            engine->angular_velocity, gb->input_angular_velocity, &clutch_torque_left,
-            &clutch_torque_right);
-
-        float right_inertia;
-        float right_only_inertia = diff->inertia + gearbox_inertia(gb);
-        if (clutch->is_locked) {
-            right_inertia = engine->inertia + right_only_inertia;
-        } else {
-            right_inertia = right_only_inertia;
-        }
-
-        float trans_torque = gearbox_torque_out(gb, clutch_torque_right);
-
-        float left_torque;
-        float right_torque;
-        differential_torque(diff, trans_torque, &left_torque, &right_torque);
+        ra_tagged_send_torque(c_engine, eng_torque,
+            (raVelocities) { .velocity_cog = velocity, .yaw_velocity_cog = yaw_velocity }, dt);
 
         float fl_brake_torque
             = brake_torque(&bd, &front_calipers, front_brake_pressure, wfl->angular_velocity);
@@ -422,18 +406,10 @@ int main(int argc, char** argv)
         float rr_brake_torque
             = brake_torque(&bd, &rear_calipers, rear_brake_pressure, wrr->angular_velocity);
 
-        left_torque += rl_brake_torque;
-        right_torque += rr_brake_torque;
-
-        wheel_update(wfl, velocity, yaw_velocity, 0.0, fl_brake_torque, dt);
-        wheel_update(wfr, velocity, yaw_velocity, 0.0, fr_brake_torque, dt);
-        wheel_update(wrl, velocity, yaw_velocity, right_inertia, left_torque, dt);
-        wheel_update(wrr, velocity, yaw_velocity, right_inertia, right_torque, dt);
-
-        add_json_wheel(&json_fl, wfl, fl_brake_torque);
-        add_json_wheel(&json_fr, wfr, fr_brake_torque);
-        add_json_wheel(&json_rl, wrl, left_torque);
-        add_json_wheel(&json_rr, wrr, right_torque);
+        /* add_json_wheel(&json_fl, wfl, fl_brake_torque); */
+        /* add_json_wheel(&json_fr, wfr, fr_brake_torque); */
+        /* add_json_wheel(&json_rl, wrl, left_torque); */
+        /* add_json_wheel(&json_rr, wrr, right_torque); */
 
         float fz = mass * gravity * 0.5;
         float fzf_lift = body_lift_front(&body, air_density, velocity.x);
@@ -470,13 +446,6 @@ int main(int argc, char** argv)
         float gearbox_velocity = gearbox_angular_velocity_in(
             gb, differential_velocity(diff, wrl->angular_velocity, wrr->angular_velocity));
 
-        if (clutch->is_locked) {
-            engine_set_angular_velocity(engine, gearbox_velocity);
-        } else {
-            engine_set_angular_velocity(
-                engine, engine->angular_velocity + clutch_torque_left / engine->inertia * dt);
-        }
-
         float zz_torque = yaw_torque(wfl, wfr, wrl, wrr, wfl_f, wfr_f, wrl_f, wrr_f);
         yaw_velocity += zz_torque / body.i_zz * dt;
         rotation += yaw_velocity * dt;
@@ -484,10 +453,10 @@ int main(int argc, char** argv)
         if (!is_quiet) {
             printf("--------------------------------\n");
             printf("Force: %f/%f\n", force.x, force.y);
-            printf("Engine velocity: %.1frpm. Torque: %f\n", rads_to_rpm(engine->angular_velocity),
-                clutch_torque_left);
-            printf("Gearbox input velocity: %.1frpm. Torque: %f\n",
-                rads_to_rpm(gb->input_angular_velocity), clutch_torque_right);
+            /* printf("Engine velocity: %.1frpm. Torque: %f\n", */
+            /*     rads_to_rpm(engine->angular_velocity), clutch_torque_left); */
+            /* printf("Gearbox input velocity: %.1frpm. Torque: %f\n", */
+            /*     rads_to_rpm(gb->input_angular_velocity), clutch_torque_right); */
             Vector2f sfl = wheel_slip(wfl);
             Vector2f sfr = wheel_slip(wfr);
             Vector2f srl = wheel_slip(wrl);
@@ -516,15 +485,17 @@ int main(int argc, char** argv)
             printf(
                 "\tForce Rl x/y = %f/%f | Force Rr = %f/%f\n", wrl_f.x, wrl_f.y, wrr_f.x, wrr_f.y);
 
-            printf("\tTorque Fl x/y = %f | Torque Fr = %f\n", fl_brake_torque, fr_brake_torque);
-            printf("\tTorque Rl x/y = %f | Torque Rr = %f\n", left_torque, right_torque);
+            /* printf("\tTorque Fl x/y = %f | Torque Fr = %f\n", fl_brake_torque, fr_brake_torque);
+             */
+            /* printf("\tTorque Rl x/y = %f | Torque Rr = %f\n", left_torque, right_torque); */
             printf("Velocity(m/s) = %f/%f | Yaw velocity = %f\n", velocity.x, velocity.y,
                 yaw_velocity);
             puts("");
         }
 
-        add_json_rotating(&json_engine, engine->angular_velocity, clutch_torque_left);
-        add_json_rotating(&json_gearbox_input, gb->input_angular_velocity, clutch_torque_right);
+        /* add_json_rotating(&json_engine, engine->angular_velocity, clutch_torque_left); */
+        /* add_json_rotating(&json_gearbox_input, gb->input_angular_velocity, clutch_torque_right);
+         */
         add_json_vehicle(&json_v, velocity, position, yaw_velocity);
 
         cJSON_AddItemToArray(json_throttle, cJSON_CreateNumber(throttle_pos));
