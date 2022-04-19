@@ -44,9 +44,11 @@ void engine_free(Engine* engine)
     free(engine);
 }
 
+static float engine_inertia(void* ty) { return ((Engine*)ty)->inertia; }
+
 raTaggedComponent* ra_tag_engine(Engine* engine)
 {
-    return ra_tagged_new(engine, (void (*)(void*))engine_free);
+    return ra_tagged_new(engine, engine_inertia, (void (*)(void*))engine_free);
 }
 
 float engine_torque(Engine* engine, float throttle_pos)
@@ -68,9 +70,11 @@ Differential* differential_new(float ratio, float inertia)
     return diff;
 }
 
+static float diff_inertia(void* ty) { return ((Differential*)ty)->inertia; }
+
 raTaggedComponent* ra_tag_differential(Differential* diff)
 {
-    return ra_tagged_split_new(diff, free);
+    return ra_tagged_split_new(diff, diff_inertia, free);
 }
 
 void differential_torque(
@@ -105,11 +109,6 @@ void gearbox_free(Gearbox* gb)
     free(gb);
 }
 
-raTaggedComponent* ra_tag_gearbox(Gearbox* gb)
-{
-    return ra_tagged_new(gb, (void (*)(void*))gearbox_free);
-}
-
 static float gearbox_current_gear(const Gearbox* gb, const VecFloat* vec)
 {
     int curr_gear = gb->curr_gear;
@@ -125,6 +124,11 @@ static float gearbox_current_gear(const Gearbox* gb, const VecFloat* vec)
 static float gearbox_ratio(const Gearbox* gb) { return gearbox_current_gear(gb, &gb->ratios); }
 
 float gearbox_inertia(const Gearbox* gb) { return gearbox_current_gear(gb, &gb->inertias); }
+
+raTaggedComponent* ra_tag_gearbox(Gearbox* gb)
+{
+    return ra_tagged_new(gb, (float (*)(void*))gearbox_inertia, (void (*)(void*))gearbox_free);
+}
 
 float gearbox_angular_velocity_in(Gearbox* gb, float angular_velocity_out)
 {
@@ -156,7 +160,14 @@ Clutch* clutch_with_torque(
     return c;
 }
 
-raTaggedComponent* ra_tag_clutch(Clutch* c) { return ra_tagged_new(c, free); }
+static float clutch_inertia(void* ty)
+{
+    SUPPRESS_UNUSED(ty);
+    // for now the clutch inertia is 0
+    return 0;
+}
+
+raTaggedComponent* ra_tag_clutch(Clutch* c) { return ra_tagged_new(c, clutch_inertia, free); }
 
 static inline float tanh_friction(float torque, AngularVelocity vel_diff, float transition)
 {

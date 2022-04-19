@@ -1,6 +1,7 @@
 #ifndef RA_WHEEL_H
 #define RA_WHEEL_H
 #include "common.h"
+#include "powertrainabs.h"
 #include "tiremodel.h"
 
 typedef struct {

@@ -5,6 +5,7 @@
 #include "brake.h"
 #include "common.h"
 #include "powertrain.h"
+#include "powertrainabs.h"
 #include "tiremodel.h"
 #include "wheel.h"
 

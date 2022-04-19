@@ -1,6 +1,7 @@
 #ifndef POWERTRAIN_H
 #define POWERTRAIN_H
 #include "common.h"
+#include "powertrainabs.h"
 #include <stdbool.h>
 
 typedef struct {

@@ -22,6 +22,8 @@ source = files(
   'src/body.h',
   'src/brake.h',
   'src/brake.c',
+  'src/powertrainabs.h',
+  'src/powertrainabs.c',
 )
 
 m_dep = cc.find_library('m', required: false)
