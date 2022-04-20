@@ -453,10 +453,9 @@ int main(int argc, char** argv)
         if (!is_quiet) {
             printf("--------------------------------\n");
             printf("Force: %f/%f\n", force.x, force.y);
-            /* printf("Engine velocity: %.1frpm. Torque: %f\n", */
-            /*     rads_to_rpm(engine->angular_velocity), clutch_torque_left); */
-            /* printf("Gearbox input velocity: %.1frpm. Torque: %f\n", */
-            /*     rads_to_rpm(gb->input_angular_velocity), clutch_torque_right); */
+            printf("Engine velocity: %.1frpm. Gearbox input velocity: %.1frpm\n",
+                rads_to_rpm(engine->angular_velocity), rads_to_rpm(gb->input_angular_velocity));
+
             Vector2f sfl = wheel_slip(wfl);
             Vector2f sfr = wheel_slip(wfr);
             Vector2f srl = wheel_slip(wrl);

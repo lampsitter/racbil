@@ -8,8 +8,6 @@
 #define M_PI 3.14159265358979323846264338327950288
 #endif
 
-#define SUPPRESS_UNUSED(x) (void)(x)
-
 typedef float AngularVelocity;
 
 float rads_to_rpm(AngularVelocity rads);

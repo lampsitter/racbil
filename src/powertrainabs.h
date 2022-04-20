@@ -35,6 +35,7 @@ struct raTaggedComponent {
     float (*inertia_fn)(raTaggedComponent* t, raInertiaDirection d);
     float (*angular_velocity_fn)(raTaggedComponent* t);
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt);
+    void (*receive_torque)(raTaggedComponent* t, float torque, float dt);
     enum raTy comp_ty;
     union raComponentTypes tty;
 };
@@ -44,6 +45,7 @@ raTaggedComponent* ra_tagged_new(void* ty,
     float (*inertia_fn)(raTaggedComponent* t, raInertiaDirection d),
     float (*angular_velocity)(raTaggedComponent* next),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
+    void (*receive_torque)(raTaggedComponent* t, float torque, float dt),
     void (*free_fn)(void* ptr));
 
 /** Create a component with two outputs */
@@ -51,6 +53,7 @@ raTaggedComponent* ra_tagged_split_new(void* ty,
     float (*inertia_fn)(raTaggedComponent* t, raInertiaDirection d),
     float (*angular_velocity)(raTaggedComponent* t),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
+    void (*receive_torque)(raTaggedComponent* t, float torque, float dt),
     void (*free_fn)(void* ptr));
 
 void ra_tagged_component_free(raTaggedComponent* c);

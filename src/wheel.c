@@ -98,7 +98,7 @@ static void wheel_send_torque(raTaggedComponent* t, raVelocities v, float torque
 
 raTaggedComponent* ra_tag_wheel(Wheel* w)
 {
-    return ra_tagged_new(w, wheel_inertia, wheel_ang_vel, wheel_send_torque, free);
+    return ra_tagged_new(w, wheel_inertia, wheel_ang_vel, wheel_send_torque, NULL, free);
 }
 
 Vector2f wheel_slip(const Wheel* wheel)
