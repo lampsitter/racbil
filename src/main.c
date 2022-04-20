@@ -537,7 +537,7 @@ int main(int argc, char** argv)
         free(json_str);
         gzclose(fs);
 
-        puts("Wrote to file output.json");
+        puts("Wrote to file output.json.gz");
     }
 
     cJSON_Delete(output_json);
