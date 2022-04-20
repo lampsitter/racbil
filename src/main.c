@@ -373,7 +373,7 @@ int main(int argc, char** argv)
     cJSON_AddNumberToObject(output_json, "dt", dt);
 
     int stage = 0;
-    while (elapsed_time <= 60.0) {
+    while (elapsed_time <= 20.0) {
         if (stage == 0 && velocity.x >= 22.2) {
             stage = 1;
 
@@ -396,9 +396,17 @@ int main(int argc, char** argv)
 
         ((ClutchTagged*)ra_tagged_component_inner(c_clutch))->curr_normal_force
             = clutch_normal_force * (1.0 - clutch_pos);
-        ra_tagged_send_torque(c_engine, eng_torque,
-            (raVelocities) { .velocity_cog = velocity, .yaw_velocity_cog = yaw_velocity }, dt);
-        ra_tagged_update_angular_velocity(c_engine);
+
+        raVelocities comb_vel
+            = (raVelocities) { .velocity_cog = velocity, .yaw_velocity_cog = yaw_velocity };
+        ra_tagged_send_torque(c_fr, 0.0, comb_vel, dt);
+        ra_tagged_send_torque(c_fl, 0.0, comb_vel, dt);
+        ra_tagged_send_torque(c_engine, eng_torque, comb_vel, dt);
+
+        for (size_t i = 0; i < osys.num_subsystems; i++) {
+            raTaggedComponent* t = osys.subsystems[i];
+            ra_tagged_update_angular_velocity(t);
+        }
 
         float fl_brake_torque
             = brake_torque(&bd, &front_calipers, front_brake_pressure, wfl->angular_velocity);
@@ -409,10 +417,10 @@ int main(int argc, char** argv)
         float rr_brake_torque
             = brake_torque(&bd, &rear_calipers, rear_brake_pressure, wrr->angular_velocity);
 
-        /* add_json_wheel(&json_fl, wfl, fl_brake_torque); */
-        /* add_json_wheel(&json_fr, wfr, fr_brake_torque); */
-        /* add_json_wheel(&json_rl, wrl, left_torque); */
-        /* add_json_wheel(&json_rr, wrr, right_torque); */
+        add_json_wheel(&json_fl, wfl, 0.0);
+        add_json_wheel(&json_fr, wfr, 0.0);
+        add_json_wheel(&json_rl, wrl, 0.0);
+        add_json_wheel(&json_rr, wrr, 0.0);
 
         float fz = mass * gravity * 0.5;
         float fzf_lift = body_lift_front(&body, air_density, velocity.x);
@@ -492,9 +500,8 @@ int main(int argc, char** argv)
             puts("");
         }
 
-        /* add_json_rotating(&json_engine, engine->angular_velocity, clutch_torque_left); */
-        /* add_json_rotating(&json_gearbox_input, gb->input_angular_velocity, clutch_torque_right);
-         */
+        add_json_rotating(&json_engine, engine->angular_velocity, 0.0);
+        add_json_rotating(&json_gearbox_input, gb->input_angular_velocity, 0.0);
         add_json_vehicle(&json_v, velocity, position, yaw_velocity);
 
         cJSON_AddItemToArray(json_throttle, cJSON_CreateNumber(throttle_pos));
