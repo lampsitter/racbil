@@ -165,7 +165,4 @@ void ra_tagged_send_torque(raTaggedComponent* t, float torque, raVelocities v, f
     t->send_torque_fn(t, v, torque, dt);
 }
 
-void ra_tagged_update_angular_velocity(raTaggedComponent* t)
-{
-    t->update_angular_velocity(t);
-}
+void ra_tagged_update_angular_velocity(raTaggedComponent* t) { t->update_angular_velocity(t); }

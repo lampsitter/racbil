@@ -394,6 +394,8 @@ int main(int argc, char** argv)
 
         float eng_torque = engine_torque(engine, rev_limiter_hard(&limiter, engine, throttle_pos));
 
+        ((ClutchTagged*)ra_tagged_component_inner(c_clutch))->curr_normal_force
+            = clutch_normal_force * (1.0 - clutch_pos);
         ra_tagged_send_torque(c_engine, eng_torque,
             (raVelocities) { .velocity_cog = velocity, .yaw_velocity_cog = yaw_velocity }, dt);
         ra_tagged_update_angular_velocity(c_engine);
@@ -443,9 +445,6 @@ int main(int argc, char** argv)
         Vector2f vel_world = vector2f_rotate(velocity, rotation);
         position.x += vel_world.x * dt;
         position.y += vel_world.y * dt;
-
-        float gearbox_velocity = gearbox_angular_velocity_in(
-            gb, differential_velocity(diff, wrl->angular_velocity, wrr->angular_velocity));
 
         float zz_torque = yaw_torque(wfl, wfr, wrl, wrr, wfl_f, wfr_f, wrl_f, wrr_f);
         yaw_velocity += zz_torque / body.i_zz * dt;

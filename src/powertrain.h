@@ -76,4 +76,11 @@ raTaggedComponent* ra_tag_clutch(Clutch* c);
 void clutch_torque_out(Clutch* clutch, float torque_in, float normal_force,
     AngularVelocity left_vel, AngularVelocity right_vel, float* torque_left, float* torque_right);
 
+/**Needed for configuring the normal force without a specific clutch implementation
+This is the type returned by `ra_tag_clutch`*/
+typedef struct {
+    Clutch* c;
+    float curr_normal_force;
+} ClutchTagged;
+
 #endif /* POWERTRAIN_H */

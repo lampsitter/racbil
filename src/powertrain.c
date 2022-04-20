@@ -260,12 +260,6 @@ Clutch* clutch_with_torque(
     return c;
 }
 
-/**Needed for configuring the normal force without a specific clutch implementation*/
-typedef struct {
-    Clutch* c;
-    float curr_normal_force;
-} ClutchTagged;
-
 static ClutchTagged* clutch_tagged_new(Clutch* c)
 {
     ClutchTagged* ct = malloc(sizeof *ct);
