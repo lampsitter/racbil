@@ -44,7 +44,16 @@ void engine_free(Engine* engine)
     free(engine);
 }
 
-static float engine_inertia(void* ty) { return ((Engine*)ty)->inertia; }
+static float engine_inertia(raTaggedComponent* t, raInertiaDirection d)
+{
+    float inertia = ((Engine*)t->ty)->inertia;
+    if (d == raInertiaDirectionNext) {
+        raTaggedComponent* next = t->tty.normal.next;
+        return inertia + next->inertia_fn(next, d);
+    } else {
+        return inertia;
+    }
+}
 
 static float engine_angular_vel(raTaggedComponent* t) { return ((Engine*)t->ty)->angular_velocity; }
 
@@ -93,7 +102,19 @@ float differential_velocity(
     return (left_angular_velocity + right_angular_velocity) * 0.5 * diff->ratio;
 }
 
-static float diff_inertia(void* ty) { return ((Differential*)ty)->inertia; }
+static float diff_inertia(raTaggedComponent* t, raInertiaDirection d)
+{
+    float inertia = ((Differential*)t->ty)->inertia;
+
+    if (d == raInertiaDirectionNext) {
+        raTaggedComponent* next_left = t->tty.split.next_left;
+        raTaggedComponent* next_right = t->tty.split.next_right;
+        return inertia + next_left->inertia_fn(next_left, d)
+            + next_right->inertia_fn(next_right, d);
+    } else {
+        return t->prev->inertia_fn(t->prev, d) + inertia;
+    }
+}
 
 static float diff_angular_vel(raTaggedComponent* t)
 {
@@ -175,9 +196,21 @@ static float gb_angular_vel(raTaggedComponent* t)
     return ((Gearbox*)t->ty)->input_angular_velocity;
 }
 
+static float gb_tagged_inertia(raTaggedComponent* t, raInertiaDirection d)
+{
+    float inertia = gearbox_inertia((Gearbox*)t->ty);
+    if (d == raInertiaDirectionNext) {
+        raTaggedComponent* next = t->tty.normal.next;
+        return inertia + next->inertia_fn(next, d);
+    } else {
+        return inertia + t->prev->inertia_fn(t->prev, d);
+    }
+}
+
 raTaggedComponent* ra_tag_gearbox(Gearbox* gb)
 {
-    return ra_tagged_new(gb, (float (*)(void*))gearbox_inertia, gb_angular_vel, gearbox_send_torque,
+    return ra_tagged_new(gb, gb_tagged_inertia, gb_angular_vel, gearbox_send_torque,
+
         (void (*)(void*))gearbox_free);
 }
 
@@ -196,13 +229,6 @@ Clutch* clutch_with_torque(
     c->torque_sensitivity = 2.0;
     c->is_locked = false;
     return c;
-}
-
-static float clutch_inertia(void* ty)
-{
-    SUPPRESS_UNUSED(ty);
-    // for now the clutch inertia is 0
-    return 0;
 }
 
 /**Needed for configuring the normal force without a specific clutch implementation*/
@@ -271,6 +297,20 @@ static void clutch_send_torque(raTaggedComponent* t, raVelocities v, float torqu
 
     } else {
         // TODO: If clutch is not locked send torque_left back up the chain as velocity.
+    }
+}
+
+static float clutch_inertia(raTaggedComponent* t, raInertiaDirection d)
+{
+    ClutchTagged* ct = (ClutchTagged*)t->ty;
+    if (!ct->c->is_locked) {
+        // Each shaft rotates independently of each other
+        return 0.0;
+    } else if (d == raInertiaDirectionNext) {
+        raTaggedComponent* next = t->tty.normal.next;
+        return next->inertia_fn(next, d);
+    } else {
+        return t->prev->inertia_fn(t->prev, d);
     }
 }
 

@@ -26,11 +26,13 @@ union raComponentTypes {
     raComponent normal;
 };
 
+typedef enum { raInertiaDirectionPrev, raInertiaDirectionNext } raInertiaDirection;
+
 struct raTaggedComponent {
     void* ty;
     raTaggedComponent* prev;
     void (*free_fn)(void* ptr);
-    float (*inertia_fn)(void* ty);
+    float (*inertia_fn)(raTaggedComponent* t, raInertiaDirection d);
     float (*angular_velocity_fn)(raTaggedComponent* t);
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt);
     enum raTy comp_ty;
@@ -38,13 +40,15 @@ struct raTaggedComponent {
 };
 
 /** Create a component */
-raTaggedComponent* ra_tagged_new(void* ty, float (*inertia)(void* ty),
+raTaggedComponent* ra_tagged_new(void* ty,
+    float (*inertia_fn)(raTaggedComponent* t, raInertiaDirection d),
     float (*angular_velocity)(raTaggedComponent* next),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*free_fn)(void* ptr));
 
 /** Create a component with two outputs */
-raTaggedComponent* ra_tagged_split_new(void* ty, float (*inertia)(void* ty),
+raTaggedComponent* ra_tagged_split_new(void* ty,
+    float (*inertia_fn)(raTaggedComponent* t, raInertiaDirection d),
     float (*angular_velocity)(raTaggedComponent* t),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*free_fn)(void* ptr));

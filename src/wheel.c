@@ -78,14 +78,21 @@ static float wheel_reaction_torque(const Wheel* wheel, Vector2f force)
     return -force.x * wheel->effective_radius;
 }
 
-static float wheel_inertia(void* ty) { return ((Wheel*)ty)->inertia; }
+static float wheel_inertia(raTaggedComponent* t, raInertiaDirection d)
+{
+    float inertia = ((Wheel*)t->ty)->inertia;
+    if (d == raInertiaDirectionNext) {
+        return inertia;
+    } else {
+        return t->prev->inertia_fn(t->prev, raInertiaDirectionPrev) + inertia;
+    }
+}
+
 static float wheel_ang_vel(raTaggedComponent* t) { return ((Wheel*)t->ty)->angular_velocity; }
 
 static void wheel_send_torque(raTaggedComponent* t, raVelocities v, float torque, float dt)
 {
-
-    // TODO: Inertia
-    float inertia = 0.0;
+    float inertia = t->prev->inertia_fn(t->prev, raInertiaDirectionPrev);
     wheel_update((Wheel*)t->ty, v.velocity_cog, v.yaw_velocity_cog, inertia, torque, dt);
 }
 
