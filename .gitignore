@@ -1,2 +1,3 @@
-/output.json.gz
+/*.json.gz
+/builddir/
 notebooks/.ipynb_checkpoints/*
