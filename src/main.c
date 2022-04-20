@@ -396,6 +396,7 @@ int main(int argc, char** argv)
 
         ra_tagged_send_torque(c_engine, eng_torque,
             (raVelocities) { .velocity_cog = velocity, .yaw_velocity_cog = yaw_velocity }, dt);
+        ra_tagged_update_angular_velocity(c_engine);
 
         float fl_brake_torque
             = brake_torque(&bd, &front_calipers, front_brake_pressure, wfl->angular_velocity);

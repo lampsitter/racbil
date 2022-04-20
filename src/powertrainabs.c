@@ -9,7 +9,7 @@ raTaggedComponent* ra_tagged_new(void* ty,
     float (*angular_velocity)(raTaggedComponent* t),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*receive_torque)(raTaggedComponent* t, float torque, float dt),
-    void (*free_fn)(void* ptr))
+    float (*update_angular_velocity)(raTaggedComponent* t), void (*free_fn)(void* ptr))
 {
     assert(ty != NULL);
     assert(free_fn != NULL);
@@ -25,6 +25,7 @@ raTaggedComponent* ra_tagged_new(void* ty,
     t->angular_velocity_fn = angular_velocity;
     t->send_torque_fn = send_torque_fn, t->prev = NULL;
     t->receive_torque = receive_torque;
+    t->update_angular_velocity = update_angular_velocity;
 
     t->tty.normal = (raComponent) {
         .next = NULL,
@@ -50,7 +51,7 @@ raTaggedComponent* ra_tagged_split_new(void* ty,
     float (*angular_velocity)(raTaggedComponent* t),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*receive_torque)(raTaggedComponent* t, float torque, float dt),
-    void (*free_fn)(void* ptr))
+    float (*update_angular_velocity)(raTaggedComponent* t), void (*free_fn)(void* ptr))
 {
     raTaggedComponent* t = malloc(sizeof *t);
     if (t == NULL) {
@@ -63,6 +64,7 @@ raTaggedComponent* ra_tagged_split_new(void* ty,
     t->angular_velocity_fn = angular_velocity;
     t->send_torque_fn = send_torque_fn, t->prev = NULL;
     t->receive_torque = receive_torque;
+    t->update_angular_velocity = update_angular_velocity;
 
     t->tty.split = (raSplitComponent) {
         .next_left = NULL,
@@ -161,4 +163,9 @@ void ra_overwiew_system_free(raOverviewSystem o)
 void ra_tagged_send_torque(raTaggedComponent* t, float torque, raVelocities v, float dt)
 {
     t->send_torque_fn(t, v, torque, dt);
+}
+
+void ra_tagged_update_angular_velocity(raTaggedComponent* t)
+{
+    t->update_angular_velocity(t);
 }

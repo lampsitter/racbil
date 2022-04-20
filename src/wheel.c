@@ -96,9 +96,16 @@ static void wheel_send_torque(raTaggedComponent* t, raVelocities v, float torque
     wheel_update((Wheel*)t->ty, v.velocity_cog, v.yaw_velocity_cog, inertia, torque, dt);
 }
 
+static float wheel_update_angular_velocity(raTaggedComponent* t)
+{
+    // Wheel velocity has already been updated in wheel_send_torque.
+    return wheel_ang_vel(t);
+}
+
 raTaggedComponent* ra_tag_wheel(Wheel* w)
 {
-    return ra_tagged_new(w, wheel_inertia, wheel_ang_vel, wheel_send_torque, NULL, free);
+    return ra_tagged_new(w, wheel_inertia, wheel_ang_vel, wheel_send_torque, NULL,
+        wheel_update_angular_velocity, free);
 }
 
 Vector2f wheel_slip(const Wheel* wheel)
