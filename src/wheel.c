@@ -81,15 +81,12 @@ static float wheel_reaction_torque(const Wheel* wheel, Vector2f force)
 static float wheel_inertia(void* ty) { return ((Wheel*)ty)->inertia; }
 static float wheel_ang_vel(raTaggedComponent* t) { return ((Wheel*)t->ty)->angular_velocity; }
 
-static void wheel_send_torque(void* ty, raVelocities v, float torque, float dt,
-    raTaggedComponent* prev, raTaggedComponent* next)
+static void wheel_send_torque(raTaggedComponent* t, raVelocities v, float torque, float dt)
 {
-    SUPPRESS_UNUSED(prev);
-    SUPPRESS_UNUSED(next);
 
     // TODO: Inertia
     float inertia = 0.0;
-    wheel_update((Wheel*)ty, v.velocity_cog, v.yaw_velocity_cog, inertia, torque, dt);
+    wheel_update((Wheel*)t->ty, v.velocity_cog, v.yaw_velocity_cog, inertia, torque, dt);
 }
 
 raTaggedComponent* ra_tag_wheel(Wheel* w)

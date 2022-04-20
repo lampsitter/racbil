@@ -12,15 +12,11 @@ typedef struct raTaggedComponent raTaggedComponent;
 
 typedef struct {
     raTaggedComponent* next;
-    void (*send_torque_fn)(void* ty, raVelocities v, float torque, float dt,
-        raTaggedComponent* prev, raTaggedComponent* next);
 } raComponent;
 
 typedef struct {
     raTaggedComponent* next_left;
     raTaggedComponent* next_right;
-    void (*send_torque_fn)(void* ty, raVelocities v, float torque, float dt,
-        raTaggedComponent* prev, raTaggedComponent* next_left, raTaggedComponent* next_right);
 } raSplitComponent;
 
 enum raTy { raTyNormal, raTySplit };
@@ -36,6 +32,7 @@ struct raTaggedComponent {
     void (*free_fn)(void* ptr);
     float (*inertia_fn)(void* ty);
     float (*angular_velocity_fn)(raTaggedComponent* t);
+    void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt);
     enum raTy comp_ty;
     union raComponentTypes tty;
 };
@@ -43,16 +40,13 @@ struct raTaggedComponent {
 /** Create a component */
 raTaggedComponent* ra_tagged_new(void* ty, float (*inertia)(void* ty),
     float (*angular_velocity)(raTaggedComponent* next),
-    void (*send_torque_fn)(void* ty, raVelocities v, float torque, float dt,
-        raTaggedComponent* prev, raTaggedComponent* next),
+    void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*free_fn)(void* ptr));
 
 /** Create a component with two outputs */
 raTaggedComponent* ra_tagged_split_new(void* ty, float (*inertia)(void* ty),
     float (*angular_velocity)(raTaggedComponent* t),
-    // TODO: Simplify with TaggedComp * t
-    void (*send_torque_fn)(void* ty, raVelocities v, float torque, float dt,
-        raTaggedComponent* prev, raTaggedComponent* next_left, raTaggedComponent* next_right),
+    void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*free_fn)(void* ptr));
 
 void ra_tagged_component_free(raTaggedComponent* c);

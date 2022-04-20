@@ -48,13 +48,10 @@ static float engine_inertia(void* ty) { return ((Engine*)ty)->inertia; }
 
 static float engine_angular_vel(raTaggedComponent* t) { return ((Engine*)t->ty)->angular_velocity; }
 
-static void engine_send_torque(void* ty, raVelocities v, float torque, float dt,
-    raTaggedComponent* prev, raTaggedComponent* next)
+static void engine_send_torque(raTaggedComponent* t, raVelocities v, float torque, float dt)
 {
-    SUPPRESS_UNUSED(ty);
-    SUPPRESS_UNUSED(prev);
     // Ignore engine torque for now since it is responsible for producing torque
-    ra_tagged_send_torque(next, torque, v, dt);
+    ra_tagged_send_torque(t->tty.normal.next, torque, v, dt);
 }
 
 raTaggedComponent* ra_tag_engine(Engine* engine)
@@ -106,15 +103,14 @@ static float diff_angular_vel(raTaggedComponent* t)
         s.next_right->angular_velocity_fn(s.next_right));
 }
 
-static void diff_send_torque(void* ty, raVelocities v, float torque, float dt,
-    raTaggedComponent* prev, raTaggedComponent* next_left, raTaggedComponent* next_right)
+static void diff_send_torque(raTaggedComponent* t, raVelocities v, float torque, float dt)
 {
-    SUPPRESS_UNUSED(prev);
     float torque_left, torque_right;
-    differential_torque((Differential*)ty, torque, &torque_left, &torque_right);
+    differential_torque((Differential*)t->ty, torque, &torque_left, &torque_right);
 
-    ra_tagged_send_torque(next_left, torque_left, v, dt);
-    ra_tagged_send_torque(next_right, torque_right, v, dt);
+    raSplitComponent s = t->tty.split;
+    ra_tagged_send_torque(s.next_left, torque_left, v, dt);
+    ra_tagged_send_torque(s.next_right, torque_right, v, dt);
 }
 
 raTaggedComponent* ra_tag_differential(Differential* diff)
@@ -168,12 +164,10 @@ float gearbox_torque_out(const Gearbox* gb, float torque_in)
     return gearbox_ratio(gb) * torque_in;
 }
 
-static void gearbox_send_torque(void* ty, raVelocities v, float torque, float dt,
-    raTaggedComponent* prev, raTaggedComponent* next)
+static void gearbox_send_torque(raTaggedComponent* t, raVelocities v, float torque, float dt)
 {
-    SUPPRESS_UNUSED(prev);
-    float gb_torque = gearbox_torque_out((Gearbox*)ty, torque);
-    ra_tagged_send_torque(next, gb_torque, v, dt);
+    float gb_torque = gearbox_torque_out((Gearbox*)t->ty, torque);
+    ra_tagged_send_torque(t->tty.normal.next, gb_torque, v, dt);
 }
 
 static float gb_angular_vel(raTaggedComponent* t)
@@ -262,18 +256,17 @@ void clutch_torque_out(Clutch* clutch, float torque_in, float normal_force,
     }
 }
 
-static void clutch_send_torque(void* ty, raVelocities v, float torque, float dt,
-    raTaggedComponent* prev, raTaggedComponent* next)
+static void clutch_send_torque(raTaggedComponent* t, raVelocities v, float torque, float dt)
 {
-    ClutchTagged* ct = (ClutchTagged*)ty;
+    ClutchTagged* ct = (ClutchTagged*)t->ty;
     float torque_left, torque_right;
 
-    float left_vel = prev->angular_velocity_fn(prev);
-    float right_vel = next->angular_velocity_fn(next);
+    float left_vel = t->prev->angular_velocity_fn(t->prev);
+    float right_vel = t->tty.normal.next->angular_velocity_fn(t->tty.normal.next);
     clutch_torque_out(
         ct->c, torque, ct->curr_normal_force, left_vel, right_vel, &torque_left, &torque_right);
 
-    ra_tagged_send_torque(next, torque_right, v, dt);
+    ra_tagged_send_torque(t->tty.normal.next, torque_right, v, dt);
     if (ct->c->is_locked) {
 
     } else {
