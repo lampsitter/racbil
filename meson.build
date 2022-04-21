@@ -34,4 +34,5 @@ executable('c_racbil', ['src/main.c', source], dependencies: [m_dep, json_dep, z
 test('test_common', executable('test_common', ['src/tests/common.c', source], dependencies: m_dep))
 test('test_cog', executable('test_cog', ['src/tests/cog.c', source], dependencies: m_dep))
 test('test_brakes', executable('test_brakes', ['src/tests/brakes.c', source], dependencies: m_dep))
+test('test_revlimiter', executable('test_revlimiter', ['src/tests/revlimiter.c', source], dependencies: m_dep))
 

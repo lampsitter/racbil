@@ -238,6 +238,8 @@ int main(int argc, char** argv)
 
     Engine engine = engine_new(0.5, torque_map);
     engine.angular_velocity = angular_vel_rpm_to_rads(1200.0);
+    RevLimiterHard limiter
+        = rev_limiter_hard_new(angular_vel_rpm_to_rads(4800.0), angular_vel_rpm_to_rads(4650.0));
 
     int num_gears = 6;
     VecFloat ratios = vec_with_capacity(num_gears);
@@ -368,11 +370,8 @@ int main(int argc, char** argv)
         master_cylinder_pressure(
             &master_cyl, master_cyl_pressure, &front_brake_pressure, &rear_brake_pressure);
 
-        float internal_throttle = throttle_pos;
-        if (engine.angular_velocity > angular_vel_rpm_to_rads(4800.0)) {
-            internal_throttle = 0.0;
-        }
-        float eng_torque = engine_torque(&engine, internal_throttle);
+        float eng_torque
+            = engine_torque(&engine, rev_limiter_hard(&limiter, &engine, throttle_pos));
 
         float clutch_torque_left, clutch_torque_right;
         clutch_torque_out(&clutch, eng_torque, clutch_normal_force * (1.0 - clutch_pos),
@@ -497,8 +496,10 @@ int main(int argc, char** argv)
 
             printf("\tSlip Fl x/y = %f/%f | Slip Fr = %f/%f\n", sfl.x, sfl.y, sfr.x, sfr.y);
             printf("\tSlip Rl x/y = %f/%f | Slip Rr = %f/%f\n", srl.x, srl.y, srr.x, srr.y);
-            printf("\tForce Fl x/y = %f/%f | Force Fr = %f/%f\n", fl_f.x, fl_f.y, fr_f.x, fr_f.y);
-            printf("\tForce Rl x/y = %f/%f | Force Rr = %f/%f\n", rl_f.x, rl_f.y, rr_f.x, rr_f.y);
+            printf(
+                "\tForce Fl x/y = %f/%f | Force Fr = %f/%f\n", wfl_f.x, wfl_f.y, wfr_f.x, wfr_f.y);
+            printf(
+                "\tForce Rl x/y = %f/%f | Force Rr = %f/%f\n", wrl_f.x, wrl_f.y, wrr_f.x, wrr_f.y);
 
             printf("\tTorque Fl x/y = %f | Torque Fr = %f\n", fl_brake_torque, fr_brake_torque);
             printf("\tTorque Rl x/y = %f | Torque Rr = %f\n", left_torque, right_torque);

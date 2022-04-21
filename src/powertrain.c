@@ -3,6 +3,31 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+RevLimiterHard rev_limiter_hard_new(
+    float activation_angular_velocity, float deactivation_angular_velocity)
+{
+    return (RevLimiterHard) {
+        .activation_angular_velocity = activation_angular_velocity,
+        .deactivation_angular_velocity = deactivation_angular_velocity,
+        .is_active = false,
+    };
+}
+
+float rev_limiter_hard(RevLimiterHard* r, Engine* e, float throttle_pos)
+{
+    if (r->is_active && e->angular_velocity < r->deactivation_angular_velocity) {
+        r->is_active = false;
+    } else if (!r->is_active && e->angular_velocity >= r->activation_angular_velocity) {
+        r->is_active = true;
+    }
+
+    if (r->is_active) {
+        return 0.0;
+    } else {
+        return throttle_pos;
+    }
+}
+
 Engine engine_new(float inertia, Table torque_map)
 {
     return (Engine) {
