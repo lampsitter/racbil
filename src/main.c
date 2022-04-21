@@ -479,7 +479,7 @@ int main(int argc, char** argv)
             Vector2f srl = wheel_slip(&wrl);
             Vector2f srr = wheel_slip(&wrr);
 
-            printf("Steering = %.3f, Throttle = %.3f, Brake: %.3f, Clutch = %.3f\n", steering_angle,
+            printf("Steering = %f, Throttle = %f, Brake: %f, Clutch = %f\n", steering_angle,
                 throttle_pos, brake_pos, clutch_pos);
             puts("Wheels:");
             printf("\tAngle Fl = %f | Angle Fr = %f\n", wfl.angle, wfr.angle);
