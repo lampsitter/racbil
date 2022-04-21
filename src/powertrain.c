@@ -220,7 +220,8 @@ static float gb_update_angular_velocity(raTaggedComponent* t)
 
 static float gb_angular_vel(raTaggedComponent* t)
 {
-    return ((Gearbox*)t->ty)->input_angular_velocity;
+    return gearbox_angular_velocity_in(
+        (Gearbox*)t->ty, ra_tagged_angular_velocity(t->tty.normal.next));
 }
 
 static float gb_tagged_inertia(raTaggedComponent* t, raInertiaDirection d)
@@ -345,8 +346,14 @@ static float clutch_update_angular_velocity(raTaggedComponent* t)
     }
 }
 
+static float clutch_angular_velocity(raTaggedComponent* t)
+{
+    // FIXME: What about when the clutch is disconnected?
+    return ra_tagged_angular_velocity(t->tty.normal.next);
+}
+
 raTaggedComponent* ra_tag_clutch(Clutch* c)
 {
-    return ra_tagged_new(clutch_tagged_new(c), clutch_inertia, NULL, clutch_send_torque, NULL,
-        clutch_update_angular_velocity, clutch_tagged_free);
+    return ra_tagged_new(clutch_tagged_new(c), clutch_inertia, clutch_angular_velocity,
+        clutch_send_torque, NULL, clutch_update_angular_velocity, clutch_tagged_free);
 }

@@ -454,6 +454,11 @@ int main(int argc, char** argv)
         position.x += vel_world.x * dt;
         position.y += vel_world.y * dt;
 
+        for (size_t i = 0; i < osys.num_subsystems; i++) {
+            raTaggedComponent* t = osys.subsystems[i];
+            ra_tagged_update_angular_velocity(t);
+        }
+
         float zz_torque = yaw_torque(wfl, wfr, wrl, wrr, wfl_f, wfr_f, wrl_f, wrr_f);
         yaw_velocity += zz_torque / body.i_zz * dt;
         rotation += yaw_velocity * dt;
