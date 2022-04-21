@@ -160,9 +160,20 @@ void ra_overwiew_system_free(raOverviewSystem o)
     o.subsystems = NULL;
 }
 
+float ra_tagged_inertia(raTaggedComponent* t, raInertiaDirection d) { return t->inertia_fn(t, d); }
+
+float ra_tagged_angular_velocity(raTaggedComponent* t) { return t->angular_velocity_fn(t); }
 void ra_tagged_send_torque(raTaggedComponent* t, float torque, raVelocities v, float dt)
 {
     t->send_torque_fn(t, v, torque, dt);
 }
 
-void ra_tagged_update_angular_velocity(raTaggedComponent* t) { t->update_angular_velocity(t); }
+void ra_tagged_receive_torque(raTaggedComponent* t, float torque, float dt)
+{
+    t->receive_torque(t, torque, dt);
+}
+
+float ra_tagged_update_angular_velocity(raTaggedComponent* t)
+{
+    return t->update_angular_velocity(t);
+}

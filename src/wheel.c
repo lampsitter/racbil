@@ -84,7 +84,7 @@ static float wheel_inertia(raTaggedComponent* t, raInertiaDirection d)
     if (d == raInertiaDirectionNext) {
         return inertia;
     } else {
-        return t->prev->inertia_fn(t->prev, raInertiaDirectionPrev) + inertia;
+        return ra_tagged_inertia(t->prev, raInertiaDirectionPrev) + inertia;
     }
 }
 
@@ -96,7 +96,7 @@ static void wheel_send_torque(raTaggedComponent* t, raVelocities v, float torque
     // TODO: Check for null on all prev and next invocations
     float inertia;
     if (t->prev != NULL) {
-        inertia = t->prev->inertia_fn(t->prev, raInertiaDirectionPrev);
+        inertia = ra_tagged_inertia(t->prev, raInertiaDirectionPrev);
     } else {
         inertia = 0.0;
     }

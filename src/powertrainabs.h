@@ -81,7 +81,10 @@ typedef struct {
 raOverviewSystem ra_overwiew_system_new(size_t max_subsystems);
 void ra_overwiew_system_free(raOverviewSystem o);
 
+float ra_tagged_inertia(raTaggedComponent* t, raInertiaDirection d);
+float ra_tagged_angular_velocity(raTaggedComponent* t);
 void ra_tagged_send_torque(raTaggedComponent* t, float torque, raVelocities v, float dt);
-void ra_tagged_update_angular_velocity(raTaggedComponent* t);
+void ra_tagged_receive_torque(raTaggedComponent* t, float torque, float dt);
+float ra_tagged_update_angular_velocity(raTaggedComponent* t);
 
 #endif /* RA_POWERTRAIN_ABS_H */

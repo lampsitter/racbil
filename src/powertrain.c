@@ -58,8 +58,7 @@ static float engine_inertia(raTaggedComponent* t, raInertiaDirection d)
 {
     float inertia = ((Engine*)t->ty)->inertia;
     if (d == raInertiaDirectionNext) {
-        raTaggedComponent* next = t->tty.normal.next;
-        return inertia + next->inertia_fn(next, d);
+        return inertia + ra_tagged_inertia(t->tty.normal.next, d);
     } else {
         return inertia;
     }
@@ -75,7 +74,7 @@ static void engine_send_torque(raTaggedComponent* t, raVelocities v, float torqu
 
 static void engine_receive_torque(raTaggedComponent* t, float torque, float dt)
 {
-    float a = torque / t->inertia_fn(t, raInertiaDirectionPrev);
+    float a = torque / ra_tagged_inertia(t, raInertiaDirectionPrev);
     Engine* e = (Engine*)t->ty;
     engine_set_angular_velocity(e, e->angular_velocity + integrate(a, dt));
 }
@@ -84,7 +83,7 @@ static float engine_update_angular_velocity(raTaggedComponent* t)
 {
     raTaggedComponent* c = t->tty.normal.next;
     Engine* e = (Engine*)t->ty;
-    engine_set_angular_velocity(e, c->update_angular_velocity(c));
+    engine_set_angular_velocity(e, ra_tagged_update_angular_velocity(c));
     return e->angular_velocity;
 }
 
@@ -124,19 +123,17 @@ static float diff_inertia(raTaggedComponent* t, raInertiaDirection d)
     if (d == raInertiaDirectionNext) {
         raTaggedComponent* next_left = t->tty.split.next_left;
         raTaggedComponent* next_right = t->tty.split.next_right;
-        return inertia + next_left->inertia_fn(next_left, d)
-            + next_right->inertia_fn(next_right, d);
+        return inertia + ra_tagged_inertia(next_left, d) + ra_tagged_inertia(next_right, d);
     } else {
-        return t->prev->inertia_fn(t->prev, d) + inertia;
+        return ra_tagged_inertia(t->prev, d) + inertia;
     }
 }
 
 static float diff_angular_vel(raTaggedComponent* t)
 {
     raSplitComponent s = t->tty.split;
-    return differential_velocity(((Differential*)t->ty),
-        s.next_left->angular_velocity_fn(s.next_left),
-        s.next_right->angular_velocity_fn(s.next_right));
+    return differential_velocity(((Differential*)t->ty), ra_tagged_angular_velocity(s.next_left),
+        ra_tagged_angular_velocity(s.next_right));
 }
 
 static void diff_send_torque(raTaggedComponent* t, raVelocities v, float torque, float dt)
@@ -153,8 +150,8 @@ static float diff_update_angular_velocity(raTaggedComponent* t)
 {
     raSplitComponent s = t->tty.split;
     return differential_velocity(((Differential*)t->ty),
-        s.next_left->update_angular_velocity(s.next_left),
-        s.next_right->update_angular_velocity(s.next_right));
+        ra_tagged_update_angular_velocity(s.next_left),
+        ra_tagged_update_angular_velocity(s.next_right));
 }
 
 raTaggedComponent* ra_tag_differential(Differential* diff)
@@ -218,7 +215,7 @@ static void gearbox_send_torque(raTaggedComponent* t, raVelocities v, float torq
 static float gb_update_angular_velocity(raTaggedComponent* t)
 {
     raTaggedComponent* next = t->tty.normal.next;
-    return gearbox_angular_velocity_in((Gearbox*)t->ty, next->update_angular_velocity(next));
+    return gearbox_angular_velocity_in((Gearbox*)t->ty, ra_tagged_update_angular_velocity(next));
 }
 
 static float gb_angular_vel(raTaggedComponent* t)
@@ -231,9 +228,9 @@ static float gb_tagged_inertia(raTaggedComponent* t, raInertiaDirection d)
     float inertia = gearbox_inertia((Gearbox*)t->ty);
     if (d == raInertiaDirectionNext) {
         raTaggedComponent* next = t->tty.normal.next;
-        return inertia + next->inertia_fn(next, d);
+        return inertia + ra_tagged_inertia(next, d);
     } else {
-        return inertia + t->prev->inertia_fn(t->prev, d);
+        return inertia + ra_tagged_inertia(t->prev, d);
     }
 }
 
@@ -310,14 +307,14 @@ static void clutch_send_torque(raTaggedComponent* t, raVelocities v, float torqu
     ClutchTagged* ct = (ClutchTagged*)t->ty;
     float torque_left, torque_right;
 
-    float left_vel = t->prev->angular_velocity_fn(t->prev);
-    float right_vel = t->tty.normal.next->angular_velocity_fn(t->tty.normal.next);
+    float left_vel = ra_tagged_angular_velocity(t->prev);
+    float right_vel = ra_tagged_angular_velocity(t->tty.normal.next);
     clutch_torque_out(
         ct->c, torque, ct->curr_normal_force, left_vel, right_vel, &torque_left, &torque_right);
 
     ra_tagged_send_torque(t->tty.normal.next, torque_right, v, dt);
     if (!ct->c->is_locked) {
-        t->prev->receive_torque(t->prev, torque_left, dt);
+        ra_tagged_receive_torque(t->prev, torque_left, dt);
     }
 }
 
@@ -328,10 +325,9 @@ static float clutch_inertia(raTaggedComponent* t, raInertiaDirection d)
         // Each shaft rotates independently of each other
         return 0.0;
     } else if (d == raInertiaDirectionNext) {
-        raTaggedComponent* next = t->tty.normal.next;
-        return next->inertia_fn(next, d);
+        return ra_tagged_inertia(t->tty.normal.next, d);
     } else {
-        return t->prev->inertia_fn(t->prev, d);
+        return ra_tagged_inertia(t->prev, d);
     }
 }
 
@@ -340,13 +336,12 @@ static float clutch_update_angular_velocity(raTaggedComponent* t)
     if (!((ClutchTagged*)t->ty)->c->is_locked) {
         // By returning the current angular velocity the prev's body velocity will
         // stay the same, which is important as we have already updated it in clutch_send_torque.
-        return t->prev->angular_velocity_fn(t->prev);
+        return ra_tagged_angular_velocity(t->prev);
     } else {
         // There is nothing wrong with sending torque up instead, but by doing it this way we can
         // force the two rotating shafts to have the same velocity. Meaning that is_locked is now a
         // correct assumption.
-        raTaggedComponent* next = t->tty.normal.next;
-        return next->update_angular_velocity(next);
+        return ra_tagged_update_angular_velocity(t->tty.normal.next);
     }
 }
 
