@@ -10,8 +10,8 @@
 
 typedef float AngularVelocity;
 
-float angular_vel_rads_to_rpm(AngularVelocity rads);
-float angular_vel_rpm_to_rads(AngularVelocity rpm);
+float rads_to_rpm(AngularVelocity rads);
+float rpm_to_rads(AngularVelocity rpm);
 
 typedef struct {
     float x, y;

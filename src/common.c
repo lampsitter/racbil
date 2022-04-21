@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-inline float angular_vel_rads_to_rpm(AngularVelocity rads) { return rads * 60.0 / (2.0 * M_PI); }
-inline float angular_vel_rpm_to_rads(AngularVelocity rpm) { return 2.0 * M_PI * rpm / 60.0; }
+inline float rads_to_rpm(AngularVelocity rads) { return rads * 60.0 / (2.0 * M_PI); }
+inline float rpm_to_rads(AngularVelocity rpm) { return 2.0 * M_PI * rpm / 60.0; }
 
 Vector2f vector2f_default(void) { return (Vector2f) { .x = 0.0f, .y = 0.0f }; }
 

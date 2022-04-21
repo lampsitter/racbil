@@ -237,9 +237,8 @@ int main(int argc, char** argv)
     torque_map.z[1][13] = 60.0;
 
     Engine engine = engine_new(0.5, torque_map);
-    engine.angular_velocity = angular_vel_rpm_to_rads(1200.0);
-    RevLimiterHard limiter
-        = rev_limiter_hard_new(angular_vel_rpm_to_rads(4800.0), angular_vel_rpm_to_rads(4650.0));
+    engine.angular_velocity = rpm_to_rads(1200.0);
+    RevLimiterHard limiter = rev_limiter_hard_new(rpm_to_rads(4800.0), rpm_to_rads(4650.0));
 
     int num_gears = 6;
     VecFloat ratios = vec_with_capacity(num_gears);
@@ -469,10 +468,10 @@ int main(int argc, char** argv)
         if (!is_quiet) {
             printf("--------------------------------\n");
             printf("Force: %f/%f\n", force.x, force.y);
-            printf("Engine velocity: %.1frpm. Torque: %f\n",
-                angular_vel_rads_to_rpm(engine.angular_velocity), clutch_torque_left);
+            printf("Engine velocity: %.1frpm. Torque: %f\n", rads_to_rpm(engine.angular_velocity),
+                clutch_torque_left);
             printf("Gearbox input velocity: %.1frpm. Torque: %f\n",
-                angular_vel_rads_to_rpm(gb.input_angular_velocity), clutch_torque_right);
+                rads_to_rpm(gb.input_angular_velocity), clutch_torque_right);
             Vector2f sfl = wheel_slip(&wfl);
             Vector2f sfr = wheel_slip(&wfr);
             Vector2f srl = wheel_slip(&wrl);
