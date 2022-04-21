@@ -92,14 +92,7 @@ static float wheel_ang_vel(raTaggedComponent* t) { return ((Wheel*)t->ty)->angul
 
 static void wheel_send_torque(raTaggedComponent* t, raVelocities v, float torque, float dt)
 {
-
-    // TODO: Check for null on all prev and next invocations
-    float inertia;
-    if (t->prev != NULL) {
-        inertia = ra_tagged_inertia(t->prev, raInertiaDirectionPrev);
-    } else {
-        inertia = 0.0;
-    }
+    float inertia = ra_tagged_inertia(t->prev, raInertiaDirectionPrev);
 
     wheel_update((Wheel*)t->ty, v.velocity_cog, v.yaw_velocity_cog, inertia, torque, dt);
 }
