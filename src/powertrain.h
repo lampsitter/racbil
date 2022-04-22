@@ -44,14 +44,13 @@ float differential_velocity(
 
 typedef struct {
     int curr_gear;
-    float reverse_ratio;
-    float reverse_inertia;
     float input_angular_velocity;
     VecFloat ratios;
     VecFloat inertias;
 } Gearbox;
 
-Gearbox gearbox_new(VecFloat ratios, VecFloat inertias, float reverse_ratio, float reverse_inertia);
+/**Reverse ratio/inertia is the first element in the lists*/
+Gearbox gearbox_new(VecFloat ratios, VecFloat inertias);
 void gearbox_free(Gearbox* gb);
 float gearbox_inertia(const Gearbox* gb);
 float gearbox_torque_out(const Gearbox* gb, float torque_in);

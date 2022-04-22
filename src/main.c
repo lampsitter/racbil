@@ -240,8 +240,9 @@ int main(int argc, char** argv)
     engine.angular_velocity = rpm_to_rads(1200.0);
     RevLimiterHard limiter = rev_limiter_hard_new(rpm_to_rads(4800.0), rpm_to_rads(4650.0));
 
-    int num_gears = 6;
+    int num_gears = 7;
     VecFloat ratios = vec_with_capacity(num_gears);
+    vec_push_float(&ratios, -1.6);
     vec_push_float(&ratios, 3.2);
     vec_push_float(&ratios, 2.31);
     vec_push_float(&ratios, 1.82);
@@ -250,6 +251,7 @@ int main(int argc, char** argv)
     vec_push_float(&ratios, 1.0);
 
     VecFloat inertias = vec_with_capacity(num_gears);
+    vec_push_float(&inertias, 0.3);
     vec_push_float(&inertias, 0.2);
     vec_push_float(&inertias, 0.18);
     vec_push_float(&inertias, 0.16);
@@ -260,7 +262,7 @@ int main(int argc, char** argv)
     float clutch_normal_force;
     Clutch clutch = clutch_with_torque(&clutch_normal_force, 300.0, 240.0);
 
-    Gearbox gb = gearbox_new(ratios, inertias, -1.6, 0.95);
+    Gearbox gb = gearbox_new(ratios, inertias);
     gb.curr_gear = 1;
 
     Differential diff = (Differential) { .ratio = 2.4, .inertia = 0.18 };
