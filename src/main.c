@@ -434,10 +434,8 @@ int main(int argc, char** argv)
         Vector2f wrl_f = vector2f_rotate(rl_f, -wrl.angle);
         Vector2f wrr_f = vector2f_rotate(rr_f, -wrr.angle);
 
-        float resitance_force_x = body_air_resistance(&body, air_density, velocity.x);
-        Vector2f force
-            = (Vector2f) { .x = wfl_f.x + wfr_f.x + wrl_f.x + wrr_f.x + resitance_force_x,
-                  .y = wfl_f.y + wfr_f.y + wrl_f.y + wrr_f.y };
+        Vector2f resistance = body_air_resistance(&body, air_density, velocity.x);
+        Vector2f force = VECTOR2F_PLUS(wfl_f, wfr_f, wrl_f, wrr_f, resistance);
 
         Vector2f old_velocity = velocity;
         velocity.x += integrate(force.x / mass, dt);

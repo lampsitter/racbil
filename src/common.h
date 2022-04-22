@@ -19,7 +19,11 @@ typedef struct {
 
 Vector2f vector2f_default(void);
 float vector2f_length(Vector2f v);
+Vector2f vector2f_plus_vec(size_t num_args, ...);
 Vector2f vector2f_rotate(Vector2f v, float angle);
+
+#define VECTOR2F_PLUS(...)                                                                         \
+    vector2f_plus_vec(sizeof((Vector2f[]) { __VA_ARGS__ }) / sizeof(Vector2f), __VA_ARGS__)
 
 typedef struct {
     float x, y, z;

@@ -32,10 +32,11 @@ Body body_new(float i_zz, float c_drag, float c_lift_front, float c_lift_rear, f
         .rear_track_width = rear_track_width };
 }
 
-float body_air_resistance(const Body* body, float air_density, float longitudinal_velocity)
+Vector2f body_air_resistance(const Body* body, float air_density, float longitudinal_velocity)
 {
     float long_sq = longitudinal_velocity * longitudinal_velocity;
-    return -(air_density * body->half_cd_a * long_sq) * signum(longitudinal_velocity);
+    float resistance = -(air_density * body->half_cd_a * long_sq) * signum(longitudinal_velocity);
+    return (Vector2f) { .x = resistance, .y = 0.0 };
 }
 
 // TODO: lift moment

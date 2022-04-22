@@ -1,6 +1,7 @@
 #include "common.h"
 #include <assert.h>
 #include <math.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +12,24 @@ inline float rpm_to_rads(AngularVelocity rpm) { return 2.0 * M_PI * rpm / 60.0; 
 Vector2f vector2f_default(void) { return (Vector2f) { .x = 0.0f, .y = 0.0f }; }
 
 float vector2f_length(Vector2f v) { return sqrtf(v.x * v.x + v.y * v.y); }
+
+Vector2f vector2f_plus_vec(size_t num_args, ...)
+{
+    va_list ap;
+    va_start(ap, num_args);
+
+    Vector2f a = { .x = 0.0, .y = 0.0 };
+
+    for (size_t i = 0; i < num_args; i++) {
+        Vector2f v = va_arg(ap, Vector2f);
+        a.x += v.x;
+        a.y += v.y;
+    }
+
+    va_end(ap);
+
+    return a;
+}
 
 Vector2f vector2f_rotate(Vector2f v, float angle)
 {
