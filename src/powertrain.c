@@ -80,29 +80,21 @@ void gearbox_free(Gearbox* gb)
     vec_free(&gb->inertias);
 }
 
-static float gearbox_ratio(const Gearbox* gb)
+static float gearbox_current_gear(const Gearbox* gb, const VecFloat* vec)
 {
     int curr_gear = gb->curr_gear;
     if (curr_gear < 0) {
-        return gb->ratios.elements[0];
+        return vec->elements[0];
     } else if (curr_gear == 0) {
         return 0;
     } else {
-        return gb->ratios.elements[curr_gear];
+        return vec->elements[curr_gear];
     }
 }
 
-float gearbox_inertia(const Gearbox* gb)
-{
-    int curr_gear = gb->curr_gear;
-    if (curr_gear < 0) {
-        return gb->inertias.elements[0];
-    } else if (curr_gear == 0) {
-        return 0;
-    } else {
-        return gb->inertias.elements[curr_gear];
-    }
-}
+static float gearbox_ratio(const Gearbox* gb) { return gearbox_current_gear(gb, &gb->ratios); }
+
+float gearbox_inertia(const Gearbox* gb) { return gearbox_current_gear(gb, &gb->inertias); }
 
 float gearbox_angular_velocity_in(Gearbox* gb, float angular_velocity_out)
 {
