@@ -379,15 +379,11 @@ int main(int argc, char** argv)
             engine.angular_velocity, gb.input_angular_velocity, &clutch_torque_left,
             &clutch_torque_right);
 
-        float left_inertia;
         float right_inertia;
-
         float right_only_inertia = diff.inertia + gearbox_inertia(&gb);
         if (clutch.is_locked) {
-            left_inertia = engine.inertia + right_only_inertia;
-            right_inertia = left_inertia;
+            right_inertia = engine.inertia + right_only_inertia;
         } else {
-            left_inertia = engine.inertia;
             right_inertia = right_only_inertia;
         }
 
@@ -458,7 +454,7 @@ int main(int argc, char** argv)
             engine_set_angular_velocity(&engine, gearbox_velocity);
         } else {
             engine_set_angular_velocity(
-                &engine, engine.angular_velocity + clutch_torque_left / left_inertia * dt);
+                &engine, engine.angular_velocity + clutch_torque_left / engine.inertia * dt);
         }
 
         float zz_torque = yaw_torque(&wfl, &wfr, &wrl, &wrr, wfl_f, wfr_f, wrl_f, wrr_f);
