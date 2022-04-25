@@ -13,7 +13,11 @@ typedef struct {
     AngularVelocity angular_velocity;
     float inertia;
     float effective_radius;
+    /**Only used for telemtry*/
+    float input_torque;
     float reaction_torque;
+    /**Torque that is not applied by the powertrain, such as brake torque*/
+    float external_torque;
 } Wheel;
 
 Wheel* wheel_new(float inertia, float radius, Vector2f position, float min_speed);

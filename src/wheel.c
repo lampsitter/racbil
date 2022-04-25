@@ -12,7 +12,9 @@ Wheel* wheel_new(float inertia, float radius, Vector2f position, float min_speed
     w->angular_velocity = min_speed / radius;
     w->hub_velocity = (Vector2f) { .x = min_speed, .y = 0.0 };
     w->angle = 0.0;
+    w->input_torque = 0.0;
     w->reaction_torque = 0.0;
+    w->external_torque = 0.0;
     return w;
 }
 
@@ -66,7 +68,9 @@ void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocit
         = translate_velocity(velocity_cog, yaw_angular_velocity_cog, wheel->position);
     set_hub_speed(wheel, hub_velocity);
 
-    float total_torque = torque + wheel->reaction_torque;
+    wheel->input_torque = torque;
+
+    float total_torque = torque + wheel->reaction_torque + wheel->external_torque;
     float dv = total_torque / (external_inertia + wheel->inertia);
     float new_velocity = wheel->angular_velocity + integrate(dv, dt);
 
