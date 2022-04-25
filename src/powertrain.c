@@ -32,6 +32,10 @@ Engine* engine_new(float inertia, Table torque_map)
 {
 
     Engine* engine = malloc(sizeof *engine);
+    if (engine == NULL) {
+        exit(EXIT_FAILURE);
+    }
+
     engine->torque_map = torque_map;
     engine->angular_velocity = 0.0f;
     engine->inertia = inertia;
@@ -96,6 +100,9 @@ raTaggedComponent* ra_tag_engine(Engine* engine)
 Differential* differential_new(float ratio, float inertia)
 {
     Differential* diff = malloc(sizeof *diff);
+    if (diff == NULL) {
+        exit(EXIT_FAILURE);
+    }
     diff->ratio = ratio;
     diff->inertia = inertia;
     return diff;
@@ -163,6 +170,10 @@ raTaggedComponent* ra_tag_differential(Differential* diff)
 Gearbox* gearbox_new(VecFloat ratios, VecFloat inertias)
 {
     Gearbox* gb = malloc(sizeof *gb);
+    if (gb == NULL) {
+        exit(EXIT_FAILURE);
+    }
+
     gb->ratios = ratios;
     gb->inertias = inertias;
     gb->curr_gear = 0;
@@ -250,6 +261,10 @@ Clutch* clutch_with_torque(
     float kinetic_coefficient = max_kinetic_torque / *max_normal_force;
 
     Clutch* c = malloc(sizeof *c);
+    if (c == NULL) {
+        exit(EXIT_FAILURE);
+    }
+
     c->static_coefficient = static_coefficient;
     c->kinetic_coefficient = kinetic_coefficient;
     c->velocity_threshold = 1.0;
@@ -261,6 +276,9 @@ Clutch* clutch_with_torque(
 static ClutchTagged* clutch_tagged_new(Clutch* c)
 {
     ClutchTagged* ct = malloc(sizeof *ct);
+    if (ct == NULL) {
+        exit(EXIT_FAILURE);
+    }
     ct->c = c;
     ct->curr_normal_force = 0.0f;
     return ct;
