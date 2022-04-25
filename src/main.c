@@ -71,6 +71,7 @@ typedef struct {
     cJSON* angle;
     cJSON* angular_velocity;
     cJSON* input_torque;
+    cJSON* brake_torque;
     cJSON* reaction_torque;
     cJSON* slip_ratio;
     cJSON* slip_angle;
@@ -83,6 +84,7 @@ static JsonWheel json_wheel_new(void)
     cJSON* angle = json_create_arr();
     cJSON* angular_velocity = json_create_arr();
     cJSON* input_torque = json_create_arr();
+    cJSON* brake_torque = json_create_arr();
     cJSON* reaction_torque = json_create_arr();
     cJSON* slip_ratio = json_create_arr();
     cJSON* slip_angle = json_create_arr();
@@ -94,6 +96,7 @@ static JsonWheel json_wheel_new(void)
     cJSON_AddItemToObject(obj, "angle", angle);
     cJSON_AddItemToObject(obj, "angular_velocity", angular_velocity);
     cJSON_AddItemToObject(obj, "input_torque", input_torque);
+    cJSON_AddItemToObject(obj, "brake_torque", brake_torque);
     cJSON_AddItemToObject(obj, "reaction_torque", reaction_torque);
 
     cJSON_AddItemToObject(obj, "slip_ratio", slip_ratio);
@@ -107,6 +110,7 @@ static JsonWheel json_wheel_new(void)
         .angular_velocity = angular_velocity,
         .reaction_torque = reaction_torque,
         .input_torque = input_torque,
+        .brake_torque = brake_torque,
         .slip_ratio = slip_ratio,
         .slip_angle = slip_angle,
     };
@@ -118,7 +122,8 @@ static void add_json_wheel(JsonWheel* j, const Wheel* w)
     cJSON_AddItemToArray(j->hub_velocity_y, cJSON_CreateNumber(w->hub_velocity.y));
     cJSON_AddItemToArray(j->angle, cJSON_CreateNumber(w->angle));
     cJSON_AddItemToArray(j->angular_velocity, cJSON_CreateNumber(w->angular_velocity));
-    cJSON_AddItemToArray(j->input_torque, cJSON_CreateNumber(w->input_torque + w->external_torque));
+    cJSON_AddItemToArray(j->input_torque, cJSON_CreateNumber(w->input_torque));
+    cJSON_AddItemToArray(j->brake_torque, cJSON_CreateNumber(w->external_torque));
     cJSON_AddItemToArray(j->reaction_torque, cJSON_CreateNumber(w->reaction_torque));
 
     Vector2f slip = wheel_slip(w);
@@ -179,7 +184,7 @@ int main(int argc, char** argv)
 
     float elapsed_time = 0.0;
 
-    float dt = 1.0 / 200.0;
+    float dt = 1.0 / 120.0;
     float mass = 1580.0f;
     float gravity = 9.806f;
     float air_density = 1.2041f;
