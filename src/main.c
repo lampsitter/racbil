@@ -417,11 +417,6 @@ int main(int argc, char** argv)
         ra_tagged_send_torque(c_fl, 0.0, comb_vel, dt);
         ra_tagged_send_torque(c_engine, eng_torque, comb_vel, dt);
 
-        for (size_t i = 0; i < osys.num_subsystems; i++) {
-            raTaggedComponent* t = osys.subsystems[i];
-            ra_tagged_update_angular_velocity(t);
-        }
-
         add_json_wheel(&json_fl, wfl);
         add_json_wheel(&json_fr, wfr);
         add_json_wheel(&json_rl, wrl);
