@@ -38,4 +38,5 @@ test('test_cog', executable('test_cog', ['src/tests/cog.c', source], dependencie
 test('test_brakes', executable('test_brakes', ['src/tests/brakes.c', source], dependencies: m_dep))
 test('test_revlimiter', executable('test_revlimiter', ['src/tests/revlimiter.c', source], dependencies: m_dep))
 test('test_gear_ratios', executable('test_gear_ratios', ['src/tests/gearbox_ratios.c', source], dependencies: m_dep))
+test('test_diff', executable('test_diff', ['src/tests/diff.c', source], dependencies: m_dep))
 

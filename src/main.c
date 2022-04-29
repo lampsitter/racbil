@@ -271,7 +271,7 @@ int main(int argc, char** argv)
     Gearbox* gb = gearbox_new(ratios, inertias);
     gb->curr_gear = 1;
 
-    Differential* diff = differential_new(2.4, 0.18);
+    Differential* diff = differential_new(2.4, 0.18, DiffTypeLocked);
 
     Cog cog = cog_from_distribution(0.55, 0.4, body.wheelbase);
 

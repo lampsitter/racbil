@@ -1,7 +1,13 @@
 #include "powertrain.h"
 #include "common.h"
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+
+static float normal_ext_torque(raTaggedComponent* t)
+{
+    return ra_tagged_external_torque(t->tty.normal.next);
+}
 
 RevLimiterHard rev_limiter_hard_new(
     float activation_angular_velocity, float deactivation_angular_velocity)
@@ -94,10 +100,11 @@ static float engine_update_angular_velocity(raTaggedComponent* t)
 raTaggedComponent* ra_tag_engine(Engine* engine)
 {
     return ra_tagged_new(engine, engine_inertia, engine_angular_vel, engine_send_torque,
-        engine_receive_torque, engine_update_angular_velocity, (void (*)(void*))engine_free);
+        engine_receive_torque, engine_update_angular_velocity, normal_ext_torque,
+        (void (*)(void*))engine_free);
 }
 
-Differential* differential_new(float ratio, float inertia)
+Differential* differential_new(float ratio, float inertia, DiffType ty)
 {
     Differential* diff = malloc(sizeof *diff);
     if (diff == NULL) {
@@ -105,16 +112,37 @@ Differential* differential_new(float ratio, float inertia)
     }
     diff->ratio = ratio;
     diff->inertia = inertia;
+    diff->ty = ty;
     return diff;
 }
 
-void differential_torque(
-    Differential* diff, float input_torque, float* output_left_torque, float* output_right_torque)
+static void differential_spool(float torque, float reaction_torque_left,
+    float reaction_torque_right, float* output_left_torque, float* output_right_torque)
 {
-    float torque = input_torque * diff->ratio;
-    // Simple open diff for now
+    float bias = (reaction_torque_right - reaction_torque_left) * 0.5;
+    *output_left_torque = torque * 0.5 + bias;
+    *output_right_torque = torque * 0.5 - bias;
+}
+
+static void differential_open(float torque, float* output_left_torque, float* output_right_torque)
+{
     *output_left_torque = torque * 0.5;
     *output_right_torque = torque * 0.5;
+}
+
+void differential_torque(Differential* diff, float input_torque, float reaction_torque_left,
+    float reaction_torque_right, float* output_left_torque, float* output_right_torque)
+{
+    float torque = input_torque * diff->ratio;
+    if (diff->ty == DiffTypeOpen) {
+        differential_open(torque, output_left_torque, output_right_torque);
+    } else if (diff->ty == DiffTypeLocked) {
+        differential_spool(torque, reaction_torque_left, reaction_torque_right, output_left_torque,
+            output_right_torque);
+    } else {
+        fprintf(stderr, "Unkown diff type");
+        exit(EXIT_FAILURE);
+    }
 }
 
 float differential_velocity(
@@ -145,10 +173,15 @@ static float diff_angular_vel(raTaggedComponent* t)
 
 static void diff_send_torque(raTaggedComponent* t, raVelocities v, float torque, float dt)
 {
-    float torque_left, torque_right;
-    differential_torque((Differential*)t->ty, torque, &torque_left, &torque_right);
-
     raSplitComponent s = t->tty.split;
+
+    float react_left = ra_tagged_external_torque(s.next_left);
+    float react_right = ra_tagged_external_torque(s.next_right);
+
+    float torque_left, torque_right;
+    differential_torque(
+        (Differential*)t->ty, torque, react_left, react_right, &torque_left, &torque_right);
+
     ra_tagged_send_torque(s.next_left, torque_left, v, dt);
     ra_tagged_send_torque(s.next_right, torque_right, v, dt);
 }
@@ -161,10 +194,16 @@ static float diff_update_angular_velocity(raTaggedComponent* t)
         ra_tagged_update_angular_velocity(s.next_right));
 }
 
+static float diff_ext_torque(raTaggedComponent* t)
+{
+    raSplitComponent s = t->tty.split;
+    return ra_tagged_external_torque(s.next_left) + ra_tagged_external_torque(s.next_right);
+}
+
 raTaggedComponent* ra_tag_differential(Differential* diff)
 {
     return ra_tagged_split_new(diff, diff_inertia, diff_angular_vel, diff_send_torque, NULL,
-        diff_update_angular_velocity, free);
+        diff_update_angular_velocity, diff_ext_torque, free);
 }
 
 Gearbox* gearbox_new(VecFloat ratios, VecFloat inertias)
@@ -249,7 +288,7 @@ static float gb_tagged_inertia(raTaggedComponent* t, raInertiaDirection d)
 raTaggedComponent* ra_tag_gearbox(Gearbox* gb)
 {
     return ra_tagged_new(gb, gb_tagged_inertia, gb_angular_vel, gearbox_send_torque, NULL,
-        gb_update_angular_velocity, (void (*)(void*))gearbox_free);
+        gb_update_angular_velocity, normal_ext_torque, (void (*)(void*))gearbox_free);
 }
 
 // Calculate max normal force from desired torque caracheristics of the clutch.
@@ -364,6 +403,17 @@ static float clutch_update_angular_velocity(raTaggedComponent* t)
     }
 }
 
+static float clutch_ext_torque(raTaggedComponent* t)
+{
+    ClutchTagged* ct = (ClutchTagged*)t->ty;
+    if (!ct->c->is_locked) {
+        // TODO:
+        exit(EXIT_FAILURE);
+    } else {
+        return ra_tagged_external_torque(t->tty.normal.next);
+    }
+}
+
 static float clutch_angular_velocity(raTaggedComponent* t)
 {
     // FIXME: What about when the clutch is disconnected?
@@ -373,5 +423,6 @@ static float clutch_angular_velocity(raTaggedComponent* t)
 raTaggedComponent* ra_tag_clutch(Clutch* c)
 {
     return ra_tagged_new(clutch_tagged_new(c), clutch_inertia, clutch_angular_velocity,
-        clutch_send_torque, NULL, clutch_update_angular_velocity, clutch_tagged_free);
+        clutch_send_torque, NULL, clutch_update_angular_velocity, clutch_ext_torque,
+        clutch_tagged_free);
 }

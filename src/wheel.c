@@ -107,10 +107,16 @@ static float wheel_update_angular_velocity(raTaggedComponent* t)
     return wheel_ang_vel(t);
 }
 
+static float wheel_ext_torque(raTaggedComponent* t)
+{
+    Wheel* w = (Wheel*)t->ty;
+    return w->reaction_torque + w->external_torque;
+}
+
 raTaggedComponent* ra_tag_wheel(Wheel* w)
 {
     return ra_tagged_new(w, wheel_inertia, wheel_ang_vel, wheel_send_torque, NULL,
-        wheel_update_angular_velocity, free);
+        wheel_update_angular_velocity, wheel_ext_torque, free);
 }
 
 Vector2f wheel_slip(const Wheel* wheel)

@@ -37,6 +37,7 @@ struct raTaggedComponent {
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt);
     void (*receive_torque)(raTaggedComponent* t, float torque, float dt);
     float (*update_angular_velocity)(raTaggedComponent* t);
+    float (*external_torque)(raTaggedComponent* t);
     enum raTy comp_ty;
     union raComponentTypes tty;
 };
@@ -47,7 +48,8 @@ raTaggedComponent* ra_tagged_new(void* ty,
     float (*angular_velocity)(raTaggedComponent* next),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*receive_torque)(raTaggedComponent* t, float torque, float dt),
-    float (*update_angular_velocity)(raTaggedComponent* t), void (*free_fn)(void* ptr));
+    float (*update_angular_velocity)(raTaggedComponent* t),
+    float (*external_torque)(raTaggedComponent* t), void (*free_fn)(void* ptr));
 
 /** Create a component with two outputs */
 raTaggedComponent* ra_tagged_split_new(void* ty,
@@ -55,7 +57,8 @@ raTaggedComponent* ra_tagged_split_new(void* ty,
     float (*angular_velocity)(raTaggedComponent* t),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*receive_torque)(raTaggedComponent* t, float torque, float dt),
-    float (*update_angular_velocity)(raTaggedComponent* t), void (*free_fn)(void* ptr));
+    float (*update_angular_velocity)(raTaggedComponent* t),
+    float (*external_torque)(raTaggedComponent* t), void (*free_fn)(void* ptr));
 
 void ra_tagged_component_free(raTaggedComponent* c);
 
@@ -86,5 +89,6 @@ float ra_tagged_angular_velocity(raTaggedComponent* t);
 void ra_tagged_send_torque(raTaggedComponent* t, float torque, raVelocities v, float dt);
 void ra_tagged_receive_torque(raTaggedComponent* t, float torque, float dt);
 float ra_tagged_update_angular_velocity(raTaggedComponent* t);
+float ra_tagged_external_torque(raTaggedComponent* t);
 
 #endif /* RA_POWERTRAIN_ABS_H */

@@ -34,15 +34,21 @@ RevLimiterHard rev_limiter_hard_new(
     float activation_angular_velocity, float deactivation_angular_velocity);
 float rev_limiter_hard(RevLimiterHard* r, Engine* e, float throttle_pos);
 
+typedef enum {
+    DiffTypeOpen,
+    DiffTypeLocked,
+} DiffType;
+
 typedef struct {
+    DiffType ty;
     float ratio;
     float inertia;
 } Differential;
 
-Differential* differential_new(float ratio, float inertia);
+Differential* differential_new(float ratio, float inertia, DiffType ty);
 raTaggedComponent* ra_tag_differential(Differential* diff);
-void differential_torque(
-    Differential* diff, float input_torque, float* output_left_torque, float* output_right_torque);
+void differential_torque(Differential* diff, float input_torque, float reaction_torque_left,
+    float reaction_torque_right, float* output_left_torque, float* output_right_torque);
 float differential_velocity(
     Differential* diff, float left_angular_velocity, float right_angular_velocity);
 
