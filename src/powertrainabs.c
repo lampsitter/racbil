@@ -5,7 +5,7 @@
 void* ra_tagged_component_inner(raTaggedComponent* c) { return c->ty; }
 
 raTaggedComponent* ra_tagged_new(void* ty,
-    float (*inertia_fn)(raTaggedComponent* t, raInertiaDirection d),
+    float (*inertia_fn)(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d),
     float (*angular_velocity)(raTaggedComponent* t),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*receive_torque)(raTaggedComponent* t, float torque, float dt),
@@ -49,7 +49,7 @@ int ra_tagged_add_next(raTaggedComponent* t, raTaggedComponent* next)
 }
 
 raTaggedComponent* ra_tagged_split_new(void* ty,
-    float (*inertia_fn)(raTaggedComponent* t, raInertiaDirection d),
+    float (*inertia_fn)(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d),
     float (*angular_velocity)(raTaggedComponent* t),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*receive_torque)(raTaggedComponent* t, float torque, float dt),
@@ -164,13 +164,13 @@ void ra_overwiew_system_free(raOverviewSystem o)
     o.subsystems = NULL;
 }
 
-float ra_tagged_inertia(raTaggedComponent* t, raInertiaDirection d)
+float ra_tagged_inertia(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d)
 {
     // TODO: Check for null on all relevant prev and next invocations
     if (t == NULL) {
         return 0.0f;
     } else {
-        return t->inertia_fn(t, d);
+        return t->inertia_fn(t, prev, d);
     }
 }
 

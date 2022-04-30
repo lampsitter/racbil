@@ -64,11 +64,12 @@ void engine_set_angular_velocity(Engine* engine, AngularVelocity velocity)
     engine->angular_velocity = fmaxf(velocity, 0.0);
 }
 
-static float engine_inertia(raTaggedComponent* t, raInertiaDirection d)
+static float engine_inertia(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d)
 {
+    SUPPRESS_UNUSED(prev);
     float inertia = ((Engine*)t->ty)->inertia;
     if (d == raInertiaDirectionNext) {
-        return inertia + ra_tagged_inertia(t->tty.normal.next, d);
+        return inertia + ra_tagged_inertia(t->tty.normal.next, t, d);
     } else {
         return inertia;
     }
@@ -84,7 +85,7 @@ static void engine_send_torque(raTaggedComponent* t, raVelocities v, float torqu
 
 static void engine_receive_torque(raTaggedComponent* t, float torque, float dt)
 {
-    float a = torque / ra_tagged_inertia(t, raInertiaDirectionPrev);
+    float a = torque / ra_tagged_inertia(t, t, raInertiaDirectionPrev);
     Engine* e = (Engine*)t->ty;
     engine_set_angular_velocity(e, e->angular_velocity + integrate(a, dt));
 }
@@ -151,16 +152,30 @@ float differential_velocity(
     return (left_angular_velocity + right_angular_velocity) * 0.5 * diff->ratio;
 }
 
-static float diff_inertia(raTaggedComponent* t, raInertiaDirection d)
+static float diff_inertia(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d)
 {
-    float inertia = ((Differential*)t->ty)->inertia;
+    Differential* diff = (Differential*)t->ty;
+    raTaggedComponent* next_left = t->tty.split.next_left;
+    raTaggedComponent* next_right = t->tty.split.next_right;
+
+    float inertia = diff->inertia;
 
     if (d == raInertiaDirectionNext) {
-        raTaggedComponent* next_left = t->tty.split.next_left;
-        raTaggedComponent* next_right = t->tty.split.next_right;
-        return inertia + ra_tagged_inertia(next_left, d) + ra_tagged_inertia(next_right, d);
+        return inertia + ra_tagged_inertia(next_left, t, d) + ra_tagged_inertia(next_right, t, d);
     } else {
-        return ra_tagged_inertia(t->prev, d) + inertia;
+        float inertia_prev = ra_tagged_inertia(t->prev, t, d) + inertia;
+        if (diff->ty == DiffTypeLocked) {
+            if (prev == next_left) {
+                return inertia_prev + ra_tagged_inertia(next_right, t, raInertiaDirectionNext);
+            } else if (prev == next_right) {
+                return inertia_prev + ra_tagged_inertia(next_left, t, raInertiaDirectionNext);
+            } else {
+                fprintf(stderr, "Incorrect previous inertia component");
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            return inertia_prev;
+        }
     }
 }
 
@@ -274,14 +289,15 @@ static float gb_angular_vel(raTaggedComponent* t)
         (Gearbox*)t->ty, ra_tagged_angular_velocity(t->tty.normal.next));
 }
 
-static float gb_tagged_inertia(raTaggedComponent* t, raInertiaDirection d)
+static float gb_tagged_inertia(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d)
 {
+    SUPPRESS_UNUSED(prev);
     float inertia = gearbox_inertia((Gearbox*)t->ty);
     if (d == raInertiaDirectionNext) {
         raTaggedComponent* next = t->tty.normal.next;
-        return inertia + ra_tagged_inertia(next, d);
+        return inertia + ra_tagged_inertia(next, t, d);
     } else {
-        return inertia + ra_tagged_inertia(t->prev, d);
+        return inertia + ra_tagged_inertia(t->prev, t, d);
     }
 }
 
@@ -376,16 +392,17 @@ static void clutch_send_torque(raTaggedComponent* t, raVelocities v, float torqu
     }
 }
 
-static float clutch_inertia(raTaggedComponent* t, raInertiaDirection d)
+static float clutch_inertia(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d)
 {
+    SUPPRESS_UNUSED(prev);
     ClutchTagged* ct = (ClutchTagged*)t->ty;
     if (!ct->c->is_locked) {
         // Each shaft rotates independently of each other
         return 0.0;
     } else if (d == raInertiaDirectionNext) {
-        return ra_tagged_inertia(t->tty.normal.next, d);
+        return ra_tagged_inertia(t->tty.normal.next, t, d);
     } else {
-        return ra_tagged_inertia(t->prev, d);
+        return ra_tagged_inertia(t->prev, t, d);
     }
 }
 

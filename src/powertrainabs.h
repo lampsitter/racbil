@@ -32,7 +32,7 @@ struct raTaggedComponent {
     void* ty;
     raTaggedComponent* prev;
     void (*free_fn)(void* ptr);
-    float (*inertia_fn)(raTaggedComponent* t, raInertiaDirection d);
+    float (*inertia_fn)(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d);
     float (*angular_velocity_fn)(raTaggedComponent* t);
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt);
     void (*receive_torque)(raTaggedComponent* t, float torque, float dt);
@@ -44,7 +44,7 @@ struct raTaggedComponent {
 
 /** Create a component */
 raTaggedComponent* ra_tagged_new(void* ty,
-    float (*inertia_fn)(raTaggedComponent* t, raInertiaDirection d),
+    float (*inertia_fn)(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d),
     float (*angular_velocity)(raTaggedComponent* next),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*receive_torque)(raTaggedComponent* t, float torque, float dt),
@@ -53,7 +53,7 @@ raTaggedComponent* ra_tagged_new(void* ty,
 
 /** Create a component with two outputs */
 raTaggedComponent* ra_tagged_split_new(void* ty,
-    float (*inertia_fn)(raTaggedComponent* t, raInertiaDirection d),
+    float (*inertia_fn)(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d),
     float (*angular_velocity)(raTaggedComponent* t),
     void (*send_torque_fn)(raTaggedComponent* t, raVelocities v, float torque, float dt),
     void (*receive_torque)(raTaggedComponent* t, float torque, float dt),
@@ -84,7 +84,7 @@ typedef struct {
 raOverviewSystem ra_overwiew_system_new(size_t max_subsystems);
 void ra_overwiew_system_free(raOverviewSystem o);
 
-float ra_tagged_inertia(raTaggedComponent* t, raInertiaDirection d);
+float ra_tagged_inertia(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d);
 float ra_tagged_angular_velocity(raTaggedComponent* t);
 void ra_tagged_send_torque(raTaggedComponent* t, float torque, raVelocities v, float dt);
 void ra_tagged_receive_torque(raTaggedComponent* t, float torque, float dt);
