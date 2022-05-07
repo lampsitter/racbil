@@ -19,7 +19,7 @@ Vector2f vector2f_plus_vec(size_t num_args, ...)
 
     Vector2f a = { .x = 0.0, .y = 0.0 };
 
-    for (size_t i = 0; i < num_args; i++) {
+    while (num_args--) {
         Vector2f v = va_arg(ap, Vector2f);
         a.x += v.x;
         a.y += v.y;
