@@ -4,8 +4,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#define ASSERT_EQ(a, b) assert(fabs(a - b) < EPSILON)
-#define ASSERT_NEQ(a, b) assert(fabs(a - b) > EPSILON)
+#define ASSERT_EQ(a, b) assert(fabsf(a - b) < EPSILON)
+#define ASSERT_NEQ(a, b) assert(fabsf(a - b) > EPSILON)
 
 int main(void)
 {

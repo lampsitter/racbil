@@ -20,7 +20,7 @@ Vector2f vector2f_plus_vec(size_t num_args, ...)
     Vector2f a = { .x = 0.0, .y = 0.0 };
 
     while (num_args--) {
-        Vector2f v = va_arg(ap, Vector2f);
+        Vector2f v = va_arg(ap, Vector2f); // NOLINT(clang-analyzer-valist.Uninitialized)
         a.x += v.x;
         a.y += v.y;
     }

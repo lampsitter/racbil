@@ -12,8 +12,9 @@
 static inline cJSON* json_create_arr(void)
 {
     cJSON* arr = cJSON_CreateArray();
-    if (arr == NULL)
+    if (arr == NULL) {
         exit(EXIT_FAILURE);
+    }
     return arr;
 }
 
@@ -523,12 +524,14 @@ int main(int argc, char** argv)
 
     if (should_write) {
         gzFile fs = gzopen("../output.json.gz", "wb");
-        if (fs == NULL)
+        if (fs == NULL) {
             exit(EXIT_FAILURE);
+        }
 
         char* json_str = cJSON_Print(output_json);
-        if (json_str == NULL)
+        if (json_str == NULL) {
             exit(EXIT_FAILURE);
+        }
 
         gzwrite(fs, json_str, strlen(json_str));
 

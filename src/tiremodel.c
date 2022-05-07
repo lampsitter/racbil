@@ -6,7 +6,7 @@ static inline float thread_velocity(float angular_velocity, float effective_radi
     return angular_velocity * effective_radius;
 }
 
-float slip_angle(Vector2f velocity, float angle) { return atan(velocity.y / velocity.x) - angle; }
+float slip_angle(Vector2f velocity, float angle) { return atanf(velocity.y / velocity.x) - angle; }
 
 float slip_ratio(Vector2f velocity, float angular_velocity, float effective_radius)
 {
@@ -19,7 +19,7 @@ float slip_ratio(Vector2f velocity, float angular_velocity, float effective_radi
 static float pacejka(float b, float c, float d, float e, float vh, float vv, float slip)
 {
     float b1 = b * (slip + vh);
-    return d * sin(c * atan(b1 - e * (b1 - atan(b1)))) + vv;
+    return d * sinf(c * atanf(b1 - e * (b1 - atanf(b1)))) + vv;
 }
 
 Vector2f tiremodel_force(const TireModel* m, float normal_force, float slip_ratio, float slip_angle,

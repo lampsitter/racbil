@@ -1,0 +1,7 @@
+---
+Checks:          'readability-braces-around-statements,performance-*,clang-diagnostic-*,clang-analyzer-*,clang-check-*'
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+AnalyzeTemporaryDtors: false
+FormatStyle:     none
+

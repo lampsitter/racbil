@@ -30,7 +30,7 @@ static Vector2f translate_velocity(
 static void set_hub_speed(Wheel* wheel, Vector2f new_velocity)
 {
     if (signum(new_velocity.x) != signum(wheel->hub_velocity.x)
-        || fabs(new_velocity.x) < wheel->min_speed) {
+        || fabsf(new_velocity.x) < wheel->min_speed) {
         // This prevents driving in reverse, so the hub velocity must be flipped
         // manually when the car is set into reverse
         wheel->hub_velocity.x = signum(wheel->hub_velocity.x) * wheel->min_speed;
@@ -47,7 +47,7 @@ static void set_angular_velocity(Wheel* wheel, float new_velocity, Vector2f velo
     if (velocity_cog.x < EPSILON) {
         float new_thread_vel = new_velocity * wheel->effective_radius;
         float hub_vel_dir = signum(wheel->hub_velocity.x);
-        if (fabs(new_thread_vel) < wheel->min_speed || signum(new_thread_vel) != hub_vel_dir) {
+        if (fabsf(new_thread_vel) < wheel->min_speed || signum(new_thread_vel) != hub_vel_dir) {
             wheel->angular_velocity = hub_vel_dir * wheel->min_speed / wheel->effective_radius;
         } else {
             wheel->angular_velocity = new_velocity;
