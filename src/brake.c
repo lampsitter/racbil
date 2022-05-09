@@ -14,20 +14,11 @@ float cylinder_force_to_pressure(const Cylinder* c, float force) { return force 
 
 float cylinder_pressure_to_force(const Cylinder* c, float pressure) { return pressure * c->area; }
 
-MasterCylinder master_cylinder_new(float max_pressure, float ratio)
+MasterCylinder master_cylinder_new(float max_pressure)
 {
-    assert(ratio >= 0.0 && ratio <= 1.0);
     return (MasterCylinder) {
         .max_pressure = max_pressure,
-        .ratio = ratio,
     };
-}
-
-void master_cylinder_pressure(
-    const MasterCylinder* cyl, float pressure, float* front_pressure, float* rear_pressure)
-{
-    *front_pressure = cyl->ratio * pressure;
-    *rear_pressure = pressure - *front_pressure;
 }
 
 BrakeDisc brake_disc_new(float static_friction_coeff, float kinetic_friction_coeff)

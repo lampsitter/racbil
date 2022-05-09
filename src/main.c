@@ -311,10 +311,10 @@ int main(int argc, char** argv)
     Wheel* wrr = wheel_new(0.6, 0.344, rr_pos, min_speed);
 
     // brake system
-    MasterCylinder master_cyl = master_cylinder_new(1200e3, 0.65);
+    MasterCylinder master_cyl = master_cylinder_new(10000e3);
     BrakeDisc bd = brake_disc_new(0.3, 0.24);
-    Caliper front_calipers = caliper_new(cylinder_from_diameter(0.022), 0.17, 2);
-    Caliper rear_calipers = caliper_new(cylinder_from_diameter(0.022), 0.18, 2);
+    Caliper front_calipers = caliper_new(cylinder_from_diameter(0.05), 0.25, 2);
+    Caliper rear_calipers = caliper_new(cylinder_from_diameter(0.05), 0.26, 2);
 
     raTaggedComponent* c_fl = ra_tag_wheel(wfl);
     raTaggedComponent* c_fr = ra_tag_wheel(wfr);
@@ -393,24 +393,21 @@ int main(int argc, char** argv)
 
         set_ackerman_angle(steering_angle * steering_ratio, body.wheelbase, wfl, wfr);
 
-        float master_cyl_pressure = master_cyl.max_pressure * brake_pos;
-        float front_brake_pressure, rear_brake_pressure;
-        master_cylinder_pressure(
-            &master_cyl, master_cyl_pressure, &front_brake_pressure, &rear_brake_pressure);
-
         float eng_torque = engine_torque(engine, rev_limiter_hard(&limiter, engine, throttle_pos));
 
         ((ClutchTagged*)ra_tagged_component_inner(c_clutch))->curr_normal_force
             = clutch_normal_force * (1.0 - clutch_pos);
 
+        float brake_pressure = master_cyl.max_pressure * brake_pos;
+
         wfl->external_torque
-            = brake_torque(&bd, &front_calipers, front_brake_pressure, wfl->angular_velocity);
+            = brake_torque(&bd, &front_calipers, brake_pressure, wfl->angular_velocity);
         wfr->external_torque
-            = brake_torque(&bd, &front_calipers, front_brake_pressure, wfr->angular_velocity);
+            = brake_torque(&bd, &front_calipers, brake_pressure, wfr->angular_velocity);
         wrl->external_torque
-            = brake_torque(&bd, &rear_calipers, rear_brake_pressure, wrl->angular_velocity);
+            = brake_torque(&bd, &rear_calipers, brake_pressure, wrl->angular_velocity);
         wrr->external_torque
-            = brake_torque(&bd, &rear_calipers, rear_brake_pressure, wrr->angular_velocity);
+            = brake_torque(&bd, &rear_calipers, brake_pressure, wrr->angular_velocity);
 
         raVelocities comb_vel
             = (raVelocities) { .velocity_cog = velocity, .yaw_velocity_cog = yaw_velocity };

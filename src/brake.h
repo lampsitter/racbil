@@ -12,13 +12,9 @@ float cylinder_pressure_to_force(const Cylinder* c, float pressure);
 
 typedef struct {
     float max_pressure;
-    /** Relationship between front/rear pressure distribution*/
-    float ratio;
 } MasterCylinder;
 
-MasterCylinder master_cylinder_new(float max_pressure, float ratio);
-void master_cylinder_pressure(
-    const MasterCylinder* cyl, float pressure, float* front_pressure, float* rear_pressure);
+MasterCylinder master_cylinder_new(float max_pressure);
 
 typedef struct {
     // TODO: vary with temperature (calculated at macroscopic level?)

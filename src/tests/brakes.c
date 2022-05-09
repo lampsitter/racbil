@@ -12,13 +12,11 @@ int main(void)
     assert(w.angular_velocity == min_speed / w.effective_radius);
     assert(w.hub_velocity.x == min_speed);
 
-    MasterCylinder mc = master_cylinder_new(17000e3, 0.6);
+    MasterCylinder mc = master_cylinder_new(17000e3);
     BrakeDisc disc = brake_disc_new(0.3, 0.24);
     Caliper caliper = caliper_new(cylinder_from_diameter(0.05), 0.18, 2);
 
-    float front_pressure, rear_pressure;
-    master_cylinder_pressure(&mc, mc.max_pressure, &front_pressure, &rear_pressure);
-    float bt = brake_torque(&disc, &caliper, front_pressure, w.angular_velocity);
+    float bt = brake_torque(&disc, &caliper, mc.max_pressure, w.angular_velocity);
 
     wheel_update(&w, (Vector2f) { .x = 0.0, .y = 0.0 }, 0.0, 0.0, bt, 1.0 / 400.0);
     assert(w.angular_velocity == min_speed / w.effective_radius);
