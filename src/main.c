@@ -387,8 +387,13 @@ int main(int argc, char** argv)
             brake_pos = 1.0;
         }
 
-        if (clutch_pos > 0.0) {
+        if (stage == 0 && clutch_pos > 0.0) {
             clutch_pos = fminf(1.0, 1.0 - fmaxf(elapsed_time * elapsed_time, 0.0));
+        }
+
+        if (stage == 1 && engine->angular_velocity <= rpm_to_rads(900.0)) {
+            throttle_pos = 1.0;
+            clutch_pos = 1.0;
         }
 
         set_ackerman_angle(steering_angle * steering_ratio, body.wheelbase, wfl, wfr);
