@@ -21,6 +21,11 @@ void engine_free(Engine* engine);
 float engine_torque(Engine* engine, float throttle_pos);
 void engine_set_angular_velocity(Engine* engine, AngularVelocity velocity);
 
+/**Calculates torque needed to reach desired velocity. If desired velocity cannot
+ be reached, then the max possible torque will be returned.*/
+float engine_demanded_torque(
+    Engine* engine, float desired_velocity, float external_inertia, float dt);
+
 /** Disables all engine throttle input when the engine velocity goes above
  * `activation_angular_velocity`. The limiter will only be disabled once the engine
  * goes below `deactivation_angular_velocity`*/
@@ -33,6 +38,10 @@ typedef struct {
 RevLimiterHard rev_limiter_hard_new(
     float activation_angular_velocity, float deactivation_angular_velocity);
 float rev_limiter_hard(RevLimiterHard* r, Engine* e, float throttle_pos);
+
+/**Automatic engine idle when clutch is disconnected*/
+float idle_engine_torque(
+    float idle_velocity, Engine* engine, float user_torque, bool is_disconnected, float dt);
 
 typedef enum {
     DiffTypeOpen,

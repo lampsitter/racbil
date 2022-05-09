@@ -391,14 +391,17 @@ int main(int argc, char** argv)
             clutch_pos = fminf(1.0, 1.0 - fmaxf(elapsed_time * elapsed_time, 0.0));
         }
 
-        if (stage == 1 && engine->angular_velocity <= rpm_to_rads(900.0)) {
-            throttle_pos = 1.0;
+        float idle_velocity = rpm_to_rads(850.0);
+        if (stage == 1 && engine->angular_velocity <= idle_velocity) {
             clutch_pos = 1.0;
         }
 
         set_ackerman_angle(steering_angle * steering_ratio, body.wheelbase, wfl, wfr);
 
-        float eng_torque = engine_torque(engine, rev_limiter_hard(&limiter, engine, throttle_pos));
+        float pre_engine_torque
+            = engine_torque(engine, rev_limiter_hard(&limiter, engine, throttle_pos));
+        float eng_torque
+            = idle_engine_torque(idle_velocity, engine, pre_engine_torque, clutch_pos == 1.0, dt);
 
         ((ClutchTagged*)ra_tagged_component_inner(c_clutch))->curr_normal_force
             = clutch_normal_force * (1.0 - clutch_pos);

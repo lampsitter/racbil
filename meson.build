@@ -39,4 +39,5 @@ test('test_brakes', executable('test_brakes', ['src/tests/brakes.c', source], de
 test('test_revlimiter', executable('test_revlimiter', ['src/tests/revlimiter.c', source], dependencies: m_dep))
 test('test_gear_ratios', executable('test_gear_ratios', ['src/tests/gearbox_ratios.c', source], dependencies: m_dep))
 test('test_diff', executable('test_diff', ['src/tests/diff.c', source], dependencies: m_dep))
+test('test_idle', executable('test_idle', ['src/tests/engine_idle.c', source], dependencies: m_dep))
 

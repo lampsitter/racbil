@@ -58,6 +58,18 @@ float engine_torque(Engine* engine, float throttle_pos)
     return table_lookup(&engine->torque_map, throttle_pos, engine->angular_velocity);
 }
 
+float engine_demanded_torque(
+    Engine* engine, float desired_velocity, float external_inertia, float dt)
+{
+    float vel_diff = desired_velocity - engine->angular_velocity;
+    float torque = (vel_diff / dt) * (engine->inertia + external_inertia);
+
+    float min_torque = engine_torque(engine, 0.0);
+    float max_torque = engine_torque(engine, 1.0);
+
+    return fmaxf(min_torque, fminf(torque, max_torque));
+}
+
 void engine_set_angular_velocity(Engine* engine, AngularVelocity velocity)
 {
     engine->angular_velocity = fmaxf(velocity, 0.0);
@@ -102,6 +114,22 @@ raTaggedComponent* ra_tag_engine(Engine* engine)
     return ra_tagged_new(engine, engine_inertia, engine_angular_vel, engine_send_torque,
         engine_receive_torque, engine_update_angular_velocity, normal_ext_torque,
         (void (*)(void*))engine_free);
+}
+
+float idle_engine_torque(
+    float idle_velocity, Engine* engine, float engine_torque, bool is_disconnected, float dt)
+{
+    if (engine->angular_velocity < idle_velocity && is_disconnected) {
+        float idle_torque = engine_demanded_torque(engine, idle_velocity, 0.0, dt);
+        // Only override user throttle if it does not provide enough torque
+        if (engine_torque < idle_torque) {
+            return idle_torque;
+        } else {
+            return engine_torque;
+        }
+    } else {
+        return engine_torque;
+    }
 }
 
 Differential* differential_new(float ratio, float inertia, DiffType ty)
