@@ -60,6 +60,6 @@ typedef struct {
 
 Table table_with_capacity(size_t x_elements, size_t y_elements);
 void table_free(Table* table);
-float table_lookup(Table* table, float x, float y);
+float table_lookup(const Table* table, float x, float y);
 
 #endif /* RA_COMMON_H */

@@ -135,8 +135,8 @@ static inline float linear_interpolation(float x1, float x2, float x3, float y1,
 /**
  * find two values on each side of a value
  */
-static void boundary_values(
-    float value, float* elements, size_t num_elements, size_t* index_below, size_t* index_above)
+static void boundary_values(float value, const float* elements, size_t num_elements,
+    size_t* index_below, size_t* index_above)
 {
     bool found = false;
     for (size_t i = 0; i < num_elements; ++i) {
@@ -160,7 +160,7 @@ static void boundary_values(
     }
 }
 
-float table_lookup(Table* table, float x, float y)
+float table_lookup(const Table* table, float x, float y)
 {
     size_t below_xi, above_xi;
     boundary_values(x, table->x, table->x_capacity, &below_xi, &above_xi);

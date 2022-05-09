@@ -36,7 +36,6 @@ float rev_limiter_hard(RevLimiterHard* r, Engine* e, float throttle_pos)
 
 Engine* engine_new(float inertia, Table torque_map)
 {
-
     Engine* engine = malloc(sizeof *engine);
     if (engine == NULL) {
         exit(EXIT_FAILURE);
