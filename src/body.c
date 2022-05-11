@@ -52,16 +52,16 @@ float body_lift_rear(const Body* body, float air_density, float longitudinal_vel
     return -air_density * body->half_clr_a * long_sq;
 }
 
-float yaw_torque(Wheel* fl, Wheel* fr, Wheel* rl, Wheel* rr, Vector2f ffl, Vector2f ffr,
-    Vector2f frl, Vector2f frr)
+float yaw_torque(Wheel** wheels, Vector2f* forces, int num_elements)
 {
-    float y = ffl.y * fl->position.x + ffr.y * fr->position.x + frl.y * rl->position.x
-        + frr.y * rr->position.x;
+    float x = 0.0;
+    float y = 0.0;
+    for (int i = 0; i < num_elements; i++) {
+        x += forces[i].x * wheels[i]->position.y;
+        y += forces[i].y * wheels[i]->position.x;
+    }
 
-    float x = ffl.x * fl->position.y + ffr.x * fr->position.y + frl.x * rl->position.y
-        + frr.x * rr->position.y;
-
-    return y + x;
+    return x + y;
 }
 
 void set_ackerman_angle(float angle, float wheelbase, Wheel* wl, Wheel* wr)

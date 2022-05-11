@@ -310,11 +310,16 @@ int main(int argc, char** argv)
     Wheel* wrl = wheel_new(0.6, 0.344, rl_pos, min_speed);
     Wheel* wrr = wheel_new(0.6, 0.344, rr_pos, min_speed);
 
+#define NUM_WHEELS 4
+    Wheel* wheels[NUM_WHEELS] = { wfl, wfr, wrl, wrr };
+
     // brake system
     MasterCylinder master_cyl = master_cylinder_new(10000e3);
     BrakeDisc bd = brake_disc_new(0.3, 0.24);
     Caliper front_calipers = caliper_new(cylinder_from_diameter(0.05), 0.25, 2);
     Caliper rear_calipers = caliper_new(cylinder_from_diameter(0.05), 0.26, 2);
+
+    Caliper calipers[NUM_WHEELS] = { front_calipers, front_calipers, rear_calipers, rear_calipers };
 
     raTaggedComponent* c_fl = ra_tag_wheel(wfl);
     raTaggedComponent* c_fr = ra_tag_wheel(wfr);
@@ -376,6 +381,8 @@ int main(int argc, char** argv)
     JsonWheel json_rr = json_wheel_new();
     cJSON_AddItemToObject(output_json, "rr_wheel", json_rr.obj);
 
+    JsonWheel json_wheels[NUM_WHEELS] = { json_fl, json_fr, json_rl, json_rr };
+
     cJSON_AddNumberToObject(output_json, "dt", dt);
 
     int stage = 0;
@@ -408,14 +415,10 @@ int main(int argc, char** argv)
 
         float brake_pressure = master_cyl.max_pressure * brake_pos;
 
-        wfl->external_torque
-            = brake_torque(&bd, &front_calipers, brake_pressure, wfl->angular_velocity);
-        wfr->external_torque
-            = brake_torque(&bd, &front_calipers, brake_pressure, wfr->angular_velocity);
-        wrl->external_torque
-            = brake_torque(&bd, &rear_calipers, brake_pressure, wrl->angular_velocity);
-        wrr->external_torque
-            = brake_torque(&bd, &rear_calipers, brake_pressure, wrr->angular_velocity);
+        for (int i = 0; i < NUM_WHEELS; i++) {
+            wheels[i]->external_torque
+                = brake_torque(&bd, &calipers[i], brake_pressure, wheels[i]->angular_velocity);
+        }
 
         raVelocities comb_vel
             = (raVelocities) { .velocity_cog = velocity, .yaw_velocity_cog = yaw_velocity };
@@ -423,10 +426,9 @@ int main(int argc, char** argv)
         ra_tagged_send_torque(c_fl, 0.0, comb_vel, dt);
         ra_tagged_send_torque(c_engine, eng_torque, comb_vel, dt);
 
-        add_json_wheel(&json_fl, wfl);
-        add_json_wheel(&json_fr, wfr);
-        add_json_wheel(&json_rl, wrl);
-        add_json_wheel(&json_rr, wrr);
+        for (int i = 0; i < NUM_WHEELS; i++) {
+            add_json_wheel(&json_wheels[i], wheels[i]);
+        }
 
         float fz = mass * gravity * 0.5;
         float fzf_lift = body_lift_front(&body, air_density, velocity.x);
@@ -434,23 +436,22 @@ int main(int argc, char** argv)
 
         float fz_front = (fz + fzf_lift) * 0.5;
         float fz_rear = (fz + fzr_lift) * 0.5;
-
-        Vector2f fl_f = wheel_force(wfl, &model, fz_front, 1.0);
-        Vector2f fr_f = wheel_force(wfr, &model, fz_front, 1.0);
-        Vector2f rl_f = wheel_force(wrl, &model, fz_rear, 1.0);
-        Vector2f rr_f = wheel_force(wrr, &model, fz_rear, 1.0);
-
-        Vector2f wfl_f = vector2f_rotate(fl_f, -wfl->angle);
-        Vector2f wfr_f = vector2f_rotate(fr_f, -wfr->angle);
-        Vector2f wrl_f = vector2f_rotate(rl_f, -wrl->angle);
-        Vector2f wrr_f = vector2f_rotate(rr_f, -wrr->angle);
+        float fzs[NUM_WHEELS] = { fz_front, fz_front, fz_rear, fz_rear };
 
         Vector2f resistance = body_air_resistance(&body, air_density, velocity.x);
-        Vector2f force = VECTOR2F_PLUS(wfl_f, wfr_f, wrl_f, wrr_f, resistance);
+
+        Vector2f sum_force = resistance;
+        Vector2f wheel_forces[NUM_WHEELS];
+
+        for (int i = 0; i < NUM_WHEELS; i++) {
+            Vector2f f = wheel_force(wheels[i], &model, fzs[i], 1.0);
+            wheel_forces[i] = vector2f_rotate(f, -wheels[i]->angle);
+            sum_force = VECTOR2F_PLUS(sum_force, wheel_forces[i]);
+        }
 
         Vector2f old_velocity = velocity;
-        velocity.x += integrate(force.x / mass, dt);
-        velocity.y += integrate(force.y / mass, dt);
+        velocity.x += integrate(sum_force.x / mass, dt);
+        velocity.y += integrate(sum_force.y / mass, dt);
 
         if (signum(old_velocity.x) != signum(velocity.x)) {
             velocity.x = 0.0;
@@ -465,13 +466,13 @@ int main(int argc, char** argv)
             ra_tagged_update_angular_velocity(t);
         }
 
-        float zz_torque = yaw_torque(wfl, wfr, wrl, wrr, wfl_f, wfr_f, wrl_f, wrr_f);
+        float zz_torque = yaw_torque(wheels, wheel_forces, NUM_WHEELS);
         yaw_velocity += zz_torque / body.i_zz * dt;
         rotation += yaw_velocity * dt;
 
         if (!is_quiet) {
             printf("--------------------------------\n");
-            printf("Force: %f/%f\n", force.x, force.y);
+            printf("Force: %f/%f\n", sum_force.x, sum_force.y);
             printf("Engine velocity: %.1frpm. Gearbox input velocity: %.1frpm\n",
                 rads_to_rpm(engine->angular_velocity), rads_to_rpm(gb->input_angular_velocity));
 
@@ -498,10 +499,10 @@ int main(int argc, char** argv)
 
             printf("\tSlip Fl x/y = %f/%f | Slip Fr = %f/%f\n", sfl.x, sfl.y, sfr.x, sfr.y);
             printf("\tSlip Rl x/y = %f/%f | Slip Rr = %f/%f\n", srl.x, srl.y, srr.x, srr.y);
-            printf(
-                "\tForce Fl x/y = %f/%f | Force Fr = %f/%f\n", wfl_f.x, wfl_f.y, wfr_f.x, wfr_f.y);
-            printf(
-                "\tForce Rl x/y = %f/%f | Force Rr = %f/%f\n", wrl_f.x, wrl_f.y, wrr_f.x, wrr_f.y);
+            printf("\tForce Fl x/y = %f/%f | Force Fr = %f/%f\n", wheel_forces[0].x,
+                wheel_forces[0].y, wheel_forces[1].x, wheel_forces[1].y);
+            printf("\tForce Rl x/y = %f/%f | Force Rr = %f/%f\n", wheel_forces[2].x,
+                wheel_forces[2].y, wheel_forces[3].x, wheel_forces[3].y);
 
             printf("\tTorque Fl x/y = %f | Torque Fr = %f\n",
                 wfl->input_torque + wfl->external_torque, wfr->input_torque + wfr->external_torque);
