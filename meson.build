@@ -24,20 +24,28 @@ source = files(
   'src/brake.c',
   'src/powertrainabs.h',
   'src/powertrainabs.c',
+  'src/racbil.h',
 )
 
 m_dep = cc.find_library('m', required: false)
 json_dep = cc.find_library('cjson')
 zlib_dep = cc.find_library('z')
 
-library('c_racbil', ['src/racbil.h', source], dependencies: m_dep)
-executable('c_racbil', ['src/main.c', source], dependencies: [m_dep, json_dep, zlib_dep])
+rac = library('c_racbil', source, dependencies: m_dep)
+rac_lib = declare_dependency(link_with: rac)
+executable('c_racbil', 'src/main.c', dependencies: [m_dep, json_dep, zlib_dep, rac_lib])
 
-test('test_common', executable('test_common', ['src/tests/common.c', source], dependencies: m_dep))
-test('test_cog', executable('test_cog', ['src/tests/cog.c', source], dependencies: m_dep))
-test('test_brakes', executable('test_brakes', ['src/tests/brakes.c', source], dependencies: m_dep))
-test('test_revlimiter', executable('test_revlimiter', ['src/tests/revlimiter.c', source], dependencies: m_dep))
-test('test_gear_ratios', executable('test_gear_ratios', ['src/tests/gearbox_ratios.c', source], dependencies: m_dep))
-test('test_diff', executable('test_diff', ['src/tests/diff.c', source], dependencies: m_dep))
-test('test_idle', executable('test_idle', ['src/tests/engine_idle.c', source], dependencies: m_dep))
+tests = [
+  'common',
+  'cog',
+  'brakes',
+  'revlimiter',
+  'gearbox_ratios',
+  'diff',
+  'engine_idle'
+]
+
+foreach c : tests
+  test('test_' + c, executable('test_' + c, 'src/tests/' + c + '.c', dependencies: [m_dep, rac_lib]))
+endforeach
 
