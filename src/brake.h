@@ -34,6 +34,7 @@ typedef struct {
 /** num_pads must always be a pair number, since there is a pad on each side of the disc*/
 Caliper caliper_new(Cylinder cylinder, float effective_radius, u_int8_t num_pads);
 
-float brake_torque(const BrakeDisc* b, const Caliper* c, float pressure, float angular_velocity);
+float brake_torque(const BrakeDisc* b, const Caliper* c, float pressure, float angular_velocity,
+    float hub_velocity_x);
 
 #endif

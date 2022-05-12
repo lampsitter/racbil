@@ -39,7 +39,8 @@ Caliper caliper_new(Cylinder cylinder, float effective_radius, u_int8_t num_pads
     };
 }
 
-float brake_torque(const BrakeDisc* b, const Caliper* c, float pressure, float angular_velocity)
+float brake_torque(const BrakeDisc* b, const Caliper* c, float pressure, float angular_velocity,
+    float hub_velocity_x)
 {
     float normal_force = cylinder_pressure_to_force(&c->cylinder, pressure);
 
@@ -56,5 +57,5 @@ float brake_torque(const BrakeDisc* b, const Caliper* c, float pressure, float a
     }
 
     return normal_force * friction_coeff * c->effective_radius * c->num_pads
-        * -signum(angular_velocity);
+        * -signum(hub_velocity_x);
 }

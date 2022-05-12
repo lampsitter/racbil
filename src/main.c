@@ -416,8 +416,8 @@ int main(int argc, char** argv)
         float brake_pressure = master_cyl.max_pressure * brake_pos;
 
         for (int i = 0; i < NUM_WHEELS; i++) {
-            wheels[i]->external_torque
-                = brake_torque(&bd, &calipers[i], brake_pressure, wheels[i]->angular_velocity);
+            wheels[i]->external_torque = brake_torque(&bd, &calipers[i], brake_pressure,
+                wheels[i]->angular_velocity, wheels[i]->hub_velocity.x);
         }
 
         raVelocities comb_vel
