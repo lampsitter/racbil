@@ -1,6 +1,10 @@
 #ifndef RA_RACBIL_H
 #define RA_RACBIL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "body.h"
 #include "brake.h"
 #include "common.h"
@@ -9,4 +13,8 @@
 #include "tiremodel.h"
 #include "wheel.h"
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* RA_RACBIL_H */
