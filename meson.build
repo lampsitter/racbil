@@ -31,8 +31,8 @@ m_dep = cc.find_library('m', required: false)
 json_dep = cc.find_library('cjson')
 zlib_dep = cc.find_library('z')
 
-rac = library('c_racbil', source, dependencies: m_dep)
-rac_lib = declare_dependency(link_with: rac)
+rac = both_libraries('c_racbil', source, dependencies: m_dep)
+rac_lib = declare_dependency(link_with: rac.get_shared_lib())
 executable('c_racbil', 'src/main.c', dependencies: [m_dep, json_dep, zlib_dep, rac_lib])
 
 tests = [
