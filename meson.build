@@ -41,6 +41,7 @@ tests = [
   'brakes',
   'revlimiter',
   'gearbox_ratios',
+  'gb_shifting',
   'diff',
   'engine_idle'
 ]

@@ -72,6 +72,8 @@ typedef struct {
 Gearbox* gearbox_new(VecFloat ratios, VecFloat inertias);
 raTaggedComponent* ra_tag_gearbox(Gearbox* gb);
 void gearbox_free(Gearbox* gb);
+void gearbox_upshift(Gearbox* gb);
+void gearbox_downshift(Gearbox* gb);
 float gearbox_inertia(const Gearbox* gb);
 float gearbox_torque_out(const Gearbox* gb, float torque_in);
 float gearbox_angular_velocity_in(Gearbox* gb, float angular_velocity_out);

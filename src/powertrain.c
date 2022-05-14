@@ -281,6 +281,20 @@ static float gearbox_current_gear(const Gearbox* gb, const VecFloat* vec)
     }
 }
 
+void gearbox_upshift(Gearbox* gb)
+{
+    if ((size_t)gb->curr_gear < gb->ratios.len - 1) {
+        gb->curr_gear++;
+    }
+}
+
+void gearbox_downshift(Gearbox* gb)
+{
+    if (gb->curr_gear > -1) {
+        gb->curr_gear--;
+    }
+}
+
 static float gearbox_ratio(const Gearbox* gb) { return gearbox_current_gear(gb, &gb->ratios); }
 
 float gearbox_inertia(const Gearbox* gb) { return gearbox_current_gear(gb, &gb->inertias); }
