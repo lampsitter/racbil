@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: sudo apt-get install -y meson libcjson-dev
+    - run: sudo apt-get install -y meson libcjson-dev valgrind
     - name: Test
       run: |
         meson setup builddir
         cd builddir
-        meson test --print-errorlogs
+        meson test --wrapper="valgrind --leak-check=full --track-origins=yes --error-exitcode=125" --print-errorlogs
