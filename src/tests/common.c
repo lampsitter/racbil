@@ -24,5 +24,7 @@ int main(void)
     assert(table_lookup(&table, 1.0, 5.0) == 20.0);
     assert(table_lookup(&table, 1.0, 10.0) == 30.0);
 
+    table_free(&table);
+
     return 0;
 }

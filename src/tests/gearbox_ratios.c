@@ -35,4 +35,6 @@ int main(void)
     gb->curr_gear = -1;
     ASSERT_EQF(gearbox_torque_out(gb, 1.0), -1.6);
     ASSERT_EQF(gearbox_inertia(gb), 0.3);
+
+    gearbox_free(gb);
 }

@@ -62,4 +62,6 @@ int main(void)
     assert(idle_engine_torque(idle_velocity, engine, max_torque, true, dt) == max_torque);
     assert(idle_engine_torque(idle_velocity, engine, min_torque, false, dt) == min_torque);
     assert(idle_engine_torque(idle_velocity, engine, min_torque, true, dt) > min_torque);
+
+    engine_free(engine);
 }
