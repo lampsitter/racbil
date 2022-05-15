@@ -1,14 +1,13 @@
-#include "../common.h"
 #include "../powertrain.h"
 #include "../powertrainabs.h"
 #include "../wheel.h"
+#include "test.h"
 #include <assert.h>
 #include <stdlib.h>
 
 int main(void)
 {
-    Table torque_map = table_with_capacity(2, 2);
-    Engine* engine = engine_new(0.5, torque_map);
+    Engine* engine = test_engine();
     Differential* diff = differential_new(2.4, 0.18, DiffTypeLocked);
     Wheel* w = wheel_new(0.6, 0.344, (Vector2f) { .x = 0.0, .y = 0.0 }, 0.01);
 

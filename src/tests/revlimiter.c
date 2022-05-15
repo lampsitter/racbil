@@ -1,19 +1,10 @@
 #include "../powertrain.h"
+#include "test.h"
 #include <assert.h>
 
 int main(void)
 {
-    Table torque_map = table_with_capacity(2, 2);
-    torque_map.x[0] = 0.0;
-    torque_map.x[1] = 1.0;
-    torque_map.y[0] = 0.0;
-    torque_map.y[1] = 1.0;
-    torque_map.z[0][0] = 0.0;
-    torque_map.z[0][1] = 0.0;
-    torque_map.z[1][0] = 0.0;
-    torque_map.z[1][1] = 0.0;
-
-    Engine* engine = engine_new(0.5, torque_map);
+    Engine* engine = test_engine();
     RevLimiterHard limiter = rev_limiter_hard_new(rpm_to_rads(1000.0), rpm_to_rads(500.0));
 
     engine->angular_velocity = rpm_to_rads(600.0);
