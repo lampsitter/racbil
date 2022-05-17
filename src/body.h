@@ -20,10 +20,9 @@ typedef struct {
     float half_cd_a;
     float half_clf_a;
     float half_clr_a;
-    float i_zz;
 } Body;
 
-Body body_new(float i_zz, float c_drag, float c_lift_front, float c_lift_rear, float frontal_area,
+Body body_new(float c_drag, float c_lift_front, float c_lift_rear, float frontal_area,
     float wheelbase, float front_track_width, float rear_track_width);
 
 Vector2f body_air_resistance(const Body* body, float air_density, float longitudinal_velocity);

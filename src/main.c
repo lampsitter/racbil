@@ -187,6 +187,7 @@ int main(int argc, char** argv)
 
     float dt = 1.0 / 120.0;
     float mass = 1580.0f;
+    float i_zz = 2600.0;
     float gravity = 9.806f;
     float air_density = 1.2041f;
 
@@ -196,7 +197,7 @@ int main(int argc, char** argv)
     float yaw_velocity = 0.0;
     float rotation = 0.0;
 
-    Body body = body_new(2600.0, 0.36, 0.1, 0.07, 1.9, 3.6f, 1.47f, 1.475f);
+    Body body = body_new(0.36, 0.1, 0.07, 1.9, 3.6f, 1.47f, 1.475f);
     Table torque_map = table_with_capacity(2, 14);
     torque_map.x[0] = 0.0;
     torque_map.x[1] = 1.0;
@@ -467,7 +468,7 @@ int main(int argc, char** argv)
         }
 
         float zz_torque = yaw_torque(wheels, wheel_forces, NUM_WHEELS);
-        yaw_velocity += zz_torque / body.i_zz * dt;
+        yaw_velocity += zz_torque / i_zz * dt;
         rotation += yaw_velocity * dt;
 
         if (!is_quiet) {
