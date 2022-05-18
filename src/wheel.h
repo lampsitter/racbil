@@ -4,6 +4,8 @@
 #include "powertrainabs.h"
 #include "tiremodel.h"
 
+typedef enum { WheelDirectionForward, WheelDirectionReverse } WheelDirection;
+
 typedef struct {
     Vector2f hub_velocity;
     Vector2f position;
@@ -22,6 +24,12 @@ typedef struct {
 
 Wheel* wheel_new(float inertia, float radius, Vector2f position, float min_speed);
 raTaggedComponent* ra_tag_wheel(Wheel* w);
+/** Changes the rotation direction of the wheel. It changes direction regardless whether
+ * the current hub velocity is larger than min_speed. Upon direction change the hub_velocity
+ * is always set to min_speed*/
+void wheel_change_direction(Wheel* w, WheelDirection d);
+/** Same as `wheel_change_direction` but only changes direction when hub_velocity == min_speed*/
+void wheel_try_change_direction(Wheel* w, WheelDirection d);
 
 Vector2f wheel_slip(const Wheel* wheel);
 void wheel_update(Wheel* wheel, Vector2f velocity_cog, float yaw_angular_velocity_cog,

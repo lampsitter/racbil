@@ -250,7 +250,7 @@ int main(int argc, char** argv)
 
     int num_gears = 7;
     VecFloat ratios = vec_with_capacity(num_gears);
-    vec_push_float(&ratios, -1.6);
+    vec_push_float(&ratios, -3.2);
     vec_push_float(&ratios, 3.2);
     vec_push_float(&ratios, 2.31);
     vec_push_float(&ratios, 1.82);
@@ -396,12 +396,22 @@ int main(int argc, char** argv)
         }
 
         if (stage == 0 && clutch_pos > 0.0) {
-            clutch_pos = fminf(1.0, 1.0 - fmaxf(elapsed_time * elapsed_time, 0.0));
+            clutch_pos = fminf(1.0, fmaxf(0.0, 1.0 - fmaxf(elapsed_time * elapsed_time, 0.0)));
         }
 
         float idle_velocity = rpm_to_rads(850.0);
         if (stage == 1 && engine->angular_velocity <= idle_velocity) {
             clutch_pos = 1.0;
+        }
+
+        if (gb->curr_gear == 1) {
+            for (int i = 0; i < NUM_WHEELS; ++i) {
+                wheel_try_change_direction(wheels[i], WheelDirectionForward);
+            }
+        } else if (gb->curr_gear == -1) {
+            for (int i = 0; i < NUM_WHEELS; ++i) {
+                wheel_try_change_direction(wheels[i], WheelDirectionReverse);
+            }
         }
 
         set_ackerman_angle(steering_angle * steering_ratio, body.wheelbase, wfl, wfr);

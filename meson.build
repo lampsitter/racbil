@@ -43,7 +43,8 @@ tests = [
   'gearbox_ratios',
   'gb_shifting',
   'diff',
-  'engine_idle'
+  'engine_idle',
+  'wheel_direction',
 ]
 
 foreach c : tests

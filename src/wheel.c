@@ -18,6 +18,26 @@ Wheel* wheel_new(float inertia, float radius, Vector2f position, float min_speed
     return w;
 }
 
+void wheel_change_direction(Wheel* w, WheelDirection d)
+{
+    float min_angular = w->min_speed / w->effective_radius;
+    if (d == WheelDirectionForward) {
+        w->angular_velocity = min_angular;
+        w->hub_velocity.x = w->min_speed;
+    } else if (d == WheelDirectionReverse) {
+        w->angular_velocity = -min_angular;
+        w->hub_velocity.x = -w->min_speed;
+    }
+}
+
+void wheel_try_change_direction(Wheel* w, WheelDirection d)
+{
+    if (fabsf(fabsf(w->hub_velocity.x) - w->min_speed) < EPSILON
+        && fabsf(w->angular_velocity) <= w->min_speed / w->effective_radius) {
+        wheel_change_direction(w, d);
+    }
+}
+
 static Vector2f translate_velocity(
     Vector2f velocity_cog, float yaw_angular_velocity_cog, Vector2f position)
 {
