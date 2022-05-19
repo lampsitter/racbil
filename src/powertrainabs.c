@@ -36,10 +36,10 @@ raTaggedComponent* ra_tagged_new(void* ty,
     return t;
 }
 
-int ra_tagged_add_next(raTaggedComponent* t, raTaggedComponent* next)
+RaErrorTaggedComponent ra_tagged_add_next(raTaggedComponent* t, raTaggedComponent* next)
 {
     if (t->comp_ty != raTyNormal) {
-        return -1;
+        return RaErrorTaggedInvalid;
     } else {
         t->tty.normal.next = next;
         next->prev = t;
@@ -78,25 +78,33 @@ raTaggedComponent* ra_tagged_split_new(void* ty,
     return t;
 }
 
-int ra_tagged_add_next_left(raTaggedComponent* t, raTaggedComponent* next)
+RaErrorTaggedComponent ra_tagged_add_next_left(raTaggedComponent* t, raTaggedComponent* next)
 {
     if (t->comp_ty != raTySplit) {
-        return -1;
+        return RaErrorTaggedInvalid;
     } else {
-        t->tty.split.next_left = next;
-        next->prev = t;
+        if (t->tty.split.next_right == next) {
+            return RaErrorTaggedSame;
+        } else {
+            t->tty.split.next_left = next;
+            next->prev = t;
+        }
     }
 
     return 0;
 }
 
-int ra_tagged_add_next_right(raTaggedComponent* t, raTaggedComponent* next)
+RaErrorTaggedComponent ra_tagged_add_next_right(raTaggedComponent* t, raTaggedComponent* next)
 {
     if (t->comp_ty != raTySplit) {
-        return -1;
+        return RaErrorTaggedInvalid;
     } else {
-        t->tty.split.next_right = next;
-        next->prev = t;
+        if (t->tty.split.next_left == next) {
+            return RaErrorTaggedSame;
+        } else {
+            t->tty.split.next_right = next;
+            next->prev = t;
+        }
     }
 
     return 0;

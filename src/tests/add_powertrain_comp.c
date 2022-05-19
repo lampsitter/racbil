@@ -18,14 +18,17 @@ int main(void)
 
     assert(ra_tagged_add_next(cengine, cdiff) == 0);
     assert(ra_tagged_add_next_left(cdiff, cwheel) == 0);
+    cdiff->tty.split.next_left = NULL;
     assert(ra_tagged_add_next_right(cdiff, cwheel) == 0);
 
-    assert(ra_tagged_add_next(cdiff, cwheel) != 0);
-    assert(ra_tagged_add_next_left(cengine, cwheel) != 0);
-    assert(ra_tagged_add_next_right(cengine, cwheel) != 0);
+    assert(ra_tagged_add_next(cdiff, cwheel) == RaErrorTaggedInvalid);
+    assert(ra_tagged_add_next_left(cengine, cwheel) == RaErrorTaggedInvalid);
+    assert(ra_tagged_add_next_right(cengine, cwheel) == RaErrorTaggedInvalid);
 
-    // To prevent double free
-    cdiff->tty.split.next_left = NULL;
+    assert(ra_tagged_add_next_left(cdiff, cwheel) == RaErrorTaggedSame);
+    cdiff->tty.split.next_right = NULL;
+    assert(ra_tagged_add_next_left(cdiff, cwheel) == 0);
+    assert(ra_tagged_add_next_right(cdiff, cwheel) == RaErrorTaggedSame);
 
     ra_tagged_component_free(cengine);
 }

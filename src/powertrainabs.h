@@ -3,6 +3,13 @@
 #include "common.h"
 #include <sys/types.h>
 
+typedef enum {
+    /**Tried to use incorrect add function for linking components*/
+    RaErrorTaggedInvalid = -1,
+    /**Added component more than once*/
+    RaErrorTaggedSame = -2,
+} RaErrorTaggedComponent;
+
 typedef struct {
     Vector2f velocity_cog;
     float yaw_velocity_cog;
@@ -67,12 +74,12 @@ void* ra_tagged_component_inner(raTaggedComponent* c);
 
 /* Returns -1 if the component cant be added. For example if the component has two next
  * components*/
-int ra_tagged_add_next(raTaggedComponent* t, raTaggedComponent* next);
+RaErrorTaggedComponent ra_tagged_add_next(raTaggedComponent* t, raTaggedComponent* next);
 
 /* Returns -1 if the componenet cant be added */
-int ra_tagged_add_next_left(raTaggedComponent* t, raTaggedComponent* next);
+RaErrorTaggedComponent ra_tagged_add_next_left(raTaggedComponent* t, raTaggedComponent* next);
 /* Returns -1 if the componenet cant be added */
-int ra_tagged_add_next_right(raTaggedComponent* t, raTaggedComponent* next);
+RaErrorTaggedComponent ra_tagged_add_next_right(raTaggedComponent* t, raTaggedComponent* next);
 
 // Updates all subsystems, this is needed for updating both driven and undriven wheels, which are
 // independent systems
