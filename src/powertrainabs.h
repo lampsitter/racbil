@@ -6,8 +6,10 @@
 typedef enum {
     /**Tried to use incorrect add function for linking components*/
     RaErrorTaggedInvalid = -1,
-    /**Added component more than once*/
+    /**Added component more than once.*/
     RaErrorTaggedSame = -2,
+    /**Component reaches itself. This will cause infinite recursion and double free.*/
+    RaErrorTaggedCyclic = -3,
 } RaErrorTaggedComponent;
 
 typedef struct {

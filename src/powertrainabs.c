@@ -1,5 +1,6 @@
 #include "powertrainabs.h"
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
 
 void* ra_tagged_component_inner(raTaggedComponent* c) { return c->ty; }
@@ -36,13 +37,35 @@ raTaggedComponent* ra_tagged_new(void* ty,
     return t;
 }
 
+static bool has_cycle(raTaggedComponent* c, raTaggedComponent* prev)
+{
+    if (prev == NULL) {
+        return false;
+    } else if (c == prev) {
+        return true;
+    } else {
+        return has_cycle(c, prev->prev);
+    }
+}
+
 RaErrorTaggedComponent ra_tagged_add_next(raTaggedComponent* t, raTaggedComponent* next)
 {
+
     if (t->comp_ty != raTyNormal) {
         return RaErrorTaggedInvalid;
     } else {
+        raTaggedComponent* curr_next = t->tty.normal.next;
+        raTaggedComponent* curr_prev = t->prev;
         t->tty.normal.next = next;
         next->prev = t;
+
+        // By disallowing cycles we prevent double free and infinite recursion
+        if (has_cycle(t, t->prev)) {
+            // restore to before the component was added
+            t->tty.normal.next = curr_next;
+            next->prev = curr_prev;
+            return RaErrorTaggedCyclic;
+        }
     }
 
     return 0;
@@ -86,8 +109,15 @@ RaErrorTaggedComponent ra_tagged_add_next_left(raTaggedComponent* t, raTaggedCom
         if (t->tty.split.next_right == next) {
             return RaErrorTaggedSame;
         } else {
+            raTaggedComponent* curr_next = t->tty.split.next_left;
+            raTaggedComponent* curr_prev = t->prev;
             t->tty.split.next_left = next;
             next->prev = t;
+            if (has_cycle(t, t->prev)) {
+                t->tty.split.next_left = curr_next;
+                next->prev = curr_prev;
+                return RaErrorTaggedCyclic;
+            }
         }
     }
 
@@ -102,8 +132,16 @@ RaErrorTaggedComponent ra_tagged_add_next_right(raTaggedComponent* t, raTaggedCo
         if (t->tty.split.next_left == next) {
             return RaErrorTaggedSame;
         } else {
+            raTaggedComponent* curr_next = t->tty.split.next_right;
+            raTaggedComponent* curr_prev = t->prev;
             t->tty.split.next_right = next;
             next->prev = t;
+
+            if (has_cycle(t, t->prev)) {
+                t->tty.split.next_right = curr_next;
+                t->prev = curr_prev;
+                return RaErrorTaggedCyclic;
+            }
         }
     }
 
@@ -115,18 +153,20 @@ static void ra_free_component(raComponent* c);
 
 void ra_tagged_component_free(raTaggedComponent* c)
 {
-    if (c->comp_ty == raTyNormal) {
-        ra_free_component(&c->tty.normal);
-    } else if (c->comp_ty == raTySplit) {
-        ra_free_split_component(&c->tty.split);
-    } else {
-        // This should be unreachable
-        abort();
+    if (c != NULL) {
+        if (c->comp_ty == raTyNormal) {
+            ra_free_component(&c->tty.normal);
+        } else if (c->comp_ty == raTySplit) {
+            ra_free_split_component(&c->tty.split);
+        } else {
+            // This should be unreachable
+            abort();
+        }
+
+        c->free_fn(c->ty);
+
+        free(c);
     }
-
-    c->free_fn(c->ty);
-
-    free(c);
 }
 
 static void ra_free_component(raComponent* c)
