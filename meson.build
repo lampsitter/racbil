@@ -45,6 +45,7 @@ tests = [
   'diff',
   'engine_idle',
   'wheel_direction',
+  'add_powertrain_comp'
 ]
 
 foreach c : tests
