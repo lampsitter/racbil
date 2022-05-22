@@ -388,7 +388,7 @@ int main(int argc, char** argv)
 
     int stage = 0;
     while (elapsed_time <= 40.0) {
-        if (stage == 0 && velocity.x >= 16.0) {
+        if (stage == 0 && fabsf(velocity.x) >= 16.0) {
             stage = 1;
 
             throttle_pos = 0.0;
@@ -460,11 +460,10 @@ int main(int argc, char** argv)
             sum_force = VECTOR2F_PLUS(sum_force, wheel_forces[i]);
         }
 
-        Vector2f old_velocity = velocity;
         velocity.x += integrate(sum_force.x / mass, dt);
         velocity.y += integrate(sum_force.y / mass, dt);
 
-        if (signum(old_velocity.x) != signum(velocity.x)) {
+        if (signum(wheels[0]->hub_velocity.x) != signum(velocity.x)) {
             velocity.x = 0.0;
         }
 

@@ -72,7 +72,7 @@ static void set_angular_velocity(Wheel* wheel, float new_velocity, Vector2f velo
         } else {
             wheel->angular_velocity = new_velocity;
         }
-    } else if (signum(velocity_cog.x) != signum(new_velocity)) {
+    } else if (signum(wheel->hub_velocity.x) != signum(new_velocity)) {
         // lock the wheel
         wheel->angular_velocity = 0.0;
     } else {
