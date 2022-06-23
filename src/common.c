@@ -67,6 +67,9 @@ void vec_push_float(VecFloat* v, float element)
     if (v->capacity == v->len) {
         v->capacity *= 2;
         v->elements = realloc(v->elements, sizeof *v->elements * v->capacity);
+        if (v->elements == NULL) {
+            exit(EXIT_FAILURE);
+        }
     }
 
     v->elements[v->len] = element;

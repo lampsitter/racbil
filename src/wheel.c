@@ -5,6 +5,10 @@
 Wheel* wheel_new(float inertia, float radius, Vector2f position, float min_speed)
 {
     Wheel* w = malloc(sizeof *w);
+    if (w == NULL) {
+        exit(EXIT_FAILURE);
+    }
+
     w->inertia = inertia;
     w->effective_radius = radius;
     w->position = position;
