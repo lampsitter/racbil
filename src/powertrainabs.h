@@ -78,9 +78,9 @@ void* ra_tagged_component_inner(raTaggedComponent* c);
  * components*/
 RaErrorTaggedComponent ra_tagged_add_next(raTaggedComponent* t, raTaggedComponent* next);
 
-/* Returns -1 if the componenet cant be added */
+/* Returns -1 if the component cant be added */
 RaErrorTaggedComponent ra_tagged_add_next_left(raTaggedComponent* t, raTaggedComponent* next);
-/* Returns -1 if the componenet cant be added */
+/* Returns -1 if the component cant be added */
 RaErrorTaggedComponent ra_tagged_add_next_right(raTaggedComponent* t, raTaggedComponent* next);
 
 // Updates all subsystems, this is needed for updating both driven and undriven wheels, which are
@@ -88,10 +88,15 @@ RaErrorTaggedComponent ra_tagged_add_next_right(raTaggedComponent* t, raTaggedCo
 typedef struct {
     size_t num_subsystems;
     raTaggedComponent** subsystems;
-} raOverviewSystem;
+} raPowertrainSystem;
 
-raOverviewSystem ra_overwiew_system_new(size_t max_subsystems);
-void ra_overwiew_system_free(raOverviewSystem o);
+raPowertrainSystem ra_powertrain_system_from_varags(size_t num_args, ...);
+raPowertrainSystem ra_powertrain_system_new(size_t max_subsystems);
+void ra_powertrain_system_free(raPowertrainSystem o);
+
+#define RA_POWERTRAIN_SYSTEM(...)                                                                  \
+    ra_powertrain_system_from_varags(                                                              \
+        sizeof((raTaggedComponent*[]) { __VA_ARGS__ }) / sizeof(raTaggedComponent*), __VA_ARGS__)
 
 float ra_tagged_inertia(raTaggedComponent* t, raTaggedComponent* prev, raInertiaDirection d);
 float ra_tagged_angular_velocity(raTaggedComponent* t);

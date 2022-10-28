@@ -274,10 +274,7 @@ int main(int argc, char** argv)
     assert(ra_tagged_add_next_left(c_diff, c_rl) == 0);
     assert(ra_tagged_add_next_right(c_diff, c_rr) == 0);
 
-    raOverviewSystem osys = ra_overwiew_system_new(3);
-    osys.subsystems[0] = c_fl;
-    osys.subsystems[1] = c_fr;
-    osys.subsystems[2] = c_engine;
+    raPowertrainSystem osys = RA_POWERTRAIN_SYSTEM(c_fl, c_fr, c_engine);
 
     cJSON* output_json = cJSON_CreateObject();
     cJSON* json_elapsed_time = json_create_arr();
@@ -472,7 +469,7 @@ int main(int argc, char** argv)
         elapsed_time += dt;
     }
 
-    ra_overwiew_system_free(osys);
+    ra_powertrain_system_free(osys);
 
     if (should_write) {
         gzFile fs = gzopen("../output.json.gz", "wb");

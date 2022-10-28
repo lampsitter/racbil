@@ -1,5 +1,6 @@
 #include "powertrainabs.h"
 #include <assert.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
@@ -188,20 +189,36 @@ static void ra_free_split_component(raSplitComponent* c)
 }
 
 // TODO: Growable list
-raOverviewSystem ra_overwiew_system_new(size_t max_subsystems)
+raPowertrainSystem ra_powertrain_system_new(size_t max_subsystems)
 {
     raTaggedComponent** subsystems = malloc(max_subsystems * sizeof *subsystems);
     if (subsystems == NULL) {
         abort();
     }
 
-    return (raOverviewSystem) {
+    return (raPowertrainSystem) {
         .num_subsystems = max_subsystems,
         .subsystems = subsystems,
     };
 }
 
-void ra_overwiew_system_free(raOverviewSystem o)
+raPowertrainSystem ra_powertrain_system_from_varags(size_t num_args, ...)
+{
+    va_list ap;
+    va_start(ap, num_args);
+
+    raPowertrainSystem s = ra_powertrain_system_new(num_args);
+
+    for (size_t i = 0; i < num_args; ++i) {
+        s.subsystems[i] = va_arg(ap, raTaggedComponent*);
+    }
+
+    va_end(ap);
+
+    return s;
+}
+
+void ra_powertrain_system_free(raPowertrainSystem o)
 {
     for (size_t i = 0; i < o.num_subsystems; i++) {
         ra_tagged_component_free(o.subsystems[i]);
