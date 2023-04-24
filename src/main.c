@@ -186,7 +186,7 @@ int main(int argc, char** argv)
 
     float elapsed_time = 0.0;
 
-    float dt = 1.0 / 120.0;
+    float dt = 1.0 / 200.0;
     float mass = 1580.0f;
     float i_zz = 2600.0;
     float gravity = 9.806f;
@@ -214,22 +214,20 @@ int main(int argc, char** argv)
     Cog cog = cog_from_distribution(0.55, 0.4, body.wheelbase);
 
     TireModel model = (TireModel) {
-        .bx = 1.9,
+        .bx = 11.0,
+        .by = 8.0,
         .cx = 1.65,
-        .dx = 1.1,
-        .ex = -1.0,
-        .vvx = 0.0,
-        .vhx = 0.0,
-
-        .by = 9.0,
         .cy = 1.36,
+        .dx = 1.05,
         .dy = 1.0,
-        .ey = 0.96,
+        .ex = 0.6,
+        .ey = 0.7,
+        .vvx = 0.0,
         .vvy = 0.0,
+        .vhx = 0.0,
         .vhy = 0.0,
-
-        .peak_slip_x = 0.4,
-        .peak_slip_y = deg_to_rad(20.0f),
+        .peak_slip_x = 0.18,
+        .peak_slip_y = deg_to_rad(30.0f),
     };
 
     Vector2f fl_pos = (Vector2f) { .x = cog_distance_to_front(cog),
@@ -257,6 +255,8 @@ int main(int argc, char** argv)
     Caliper rear_calipers = caliper_new(cylinder_from_diameter(0.05), 0.26, 2);
 
     Caliper calipers[NUM_WHEELS] = { front_calipers, front_calipers, rear_calipers, rear_calipers };
+    Abs single_abs = abs_new(-0.18, 2.0);
+    Abs abs[NUM_WHEELS] = { single_abs, single_abs, single_abs, single_abs };
 
     raTaggedComponent* c_fl = ra_tag_wheel(wfl);
     raTaggedComponent* c_fr = ra_tag_wheel(wfr);
@@ -329,7 +329,8 @@ int main(int argc, char** argv)
         }
 
         if (stage == 0 && clutch_pos > 0.0) {
-            clutch_pos = fminf(1.0, fmaxf(0.0, 1.0 - fmaxf(elapsed_time * elapsed_time, 0.0)));
+            clutch_pos
+                = fminf(1.0, fmaxf(0.0, 1.0 - fmaxf(elapsed_time * elapsed_time * 0.09, 0.0)));
         }
 
         float idle_velocity = rpm_to_rads(850.0);
@@ -357,11 +358,14 @@ int main(int argc, char** argv)
         ((ClutchTagged*)ra_tagged_component_inner(c_clutch))->curr_normal_force
             = clutch_normal_force * (1.0 - clutch_pos);
 
-        float brake_pressure = master_cyl.max_pressure * brake_pos;
+        float master_pressure = master_cyl.max_pressure * brake_pos;
 
         for (int i = 0; i < NUM_WHEELS; i++) {
-            wheels[i]->external_torque = brake_torque(&bd, &calipers[i], brake_pressure,
-                wheels[i]->angular_velocity, wheels[i]->hub_velocity.x);
+            float vel = wheels[i]->hub_velocity.x;
+            Vector2f slip = wheel_slip(wheels[i]);
+            float brake_pressure = abs_pressure(&abs[i], master_pressure, vel, slip.x);
+            wheels[i]->external_torque
+                = brake_torque(&bd, &calipers[i], brake_pressure, wheels[i]->angular_velocity, vel);
         }
 
         raVelocities comb_vel

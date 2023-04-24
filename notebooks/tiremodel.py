@@ -40,22 +40,3 @@ class TireModel(ctypes.Structure):
             slip_angle,
             friction_coefficient,
         )
-
-
-def default_tiremodel():
-    return TireModel(
-        bx=1.9,
-        by=9.0,
-        cx=1.65,
-        cy=1.36,
-        dx=1.1,
-        dy=1.0,
-        ex=-1.0,
-        ey=0.96,
-        vvx=0.0,
-        vvy=0.0,
-        vhx=0.0,
-        vhy=0.0,
-        peak_slip_x=0.4,
-        peak_slip_y=math.radians(20.0),
-    )

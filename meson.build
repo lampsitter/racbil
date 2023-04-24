@@ -24,6 +24,8 @@ source = files(
   'src/brake.c',
   'src/powertrainabs.h',
   'src/powertrainabs.c',
+  'src/assists.h',
+  'src/assists.c',
   'src/racbil.h',
 )
 
@@ -47,6 +49,7 @@ tests = [
   'wheel_direction',
   'add_powertrain_comp',
   'cyclic_powertrain',
+  'abs',
 ]
 
 foreach c : tests

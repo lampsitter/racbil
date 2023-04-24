@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include "assists.h"
 #include "body.h"
 #include "brake.h"
 #include "common.h"
